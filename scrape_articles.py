@@ -2,11 +2,14 @@ from bs4 import BeautifulSoup
 import json
 from html.parser import HTMLParser
 from selenium import webdriver
+import re
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 import requests
+import openai
 import urllib
+import api
 
 url = f"https://api.start.me/widgets/64657916,64619065,64814145/articles" 
 url2 = f"https://api.start.me/widgets/63871721/articles"
@@ -22,9 +25,34 @@ rss_1 = json.loads(BeautifulSoup(first).get_text())
 # rss_2 = json.loads(BeautifulSoup(second).get_text())
 
 # merged_dict = {**rss_1, **rss_2}
+tag = re.compile(r'<[^>]+>')
 
+messages = []
+forbidden_links = []
+
+technology = ["AI", "Technology", "Privacy", "Cybersecurity"]
 for theme in rss_1:
     for entry in rss_1[theme]:
-       page = requests.get(entry['url']).text
-       soup = BeautifulSoup(page, 'html.parser').find_all('p')
-       print(soup)
+
+        if ("arxiv" in entry['url']):
+            # Make a function for PDFs here
+            continue
+        page = requests.get(entry['url'])
+
+        print(entry['url'], page.status_code)
+        if page.status_code == 403 :
+            forbidden_links.append(entry['url'])
+            continue
+
+        soup = BeautifulSoup(page.text, 'html.parser').find_all('p')
+
+        paragraphs = []
+        for x in soup:
+            paragraphs.append(str(x))
+
+        paragraphs = ' '.join(paragraphs)
+        clean_text = re.sub(tag, '', paragraphs)
+
+        
+
+    
