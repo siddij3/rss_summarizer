@@ -30,9 +30,13 @@ tag = re.compile(r'<[^>]+>')
 messages = []
 forbidden_links = []
 
-technology = ["AI", "Technology", "Privacy", "Cybersecurity"]
-for theme in rss_1:
+technology_list = ["AI", "Technology", "Privacy", "Cybersecurity"]
+
+
+for i, theme in enumerate(rss_1):
     for entry in rss_1[theme]:
+
+        
 
         if ("arxiv" in entry['url']):
             # Make a function for PDFs here
@@ -53,6 +57,23 @@ for theme in rss_1:
         paragraphs = ' '.join(paragraphs)
         clean_text = re.sub(tag, '', paragraphs)
 
+        technology = technology_list[i]
+        response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "system", "content": api.system_content},
+                {"role": "user", "content": clean_text}]
+                )
         
+        clean_article = response.choices[0].message.content
 
+        response2 = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "system", "content": api.system_content2},
+                    {"role": "user", "content": clean_article}]
+        )
+        print(response2.choices[0].message.content)
+        messages.append([entry['url'], response2.choices[0].message.content])
     
+
+with open('messages.txt', 'w') as f:
+    f.write(str(messages))
