@@ -10,6 +10,7 @@ import requests
 import openai
 import urllib
 import api
+import tiktoken
 
 def get_links(urls):
 
@@ -32,8 +33,74 @@ def get_links(urls):
     return merged_dict
 
 
+def get_page(url):
+
+    page = requests.get(url)
+    print(url, page.status_code)
+    return page
+
+def REST_codes():
+
+    return 1
+
+def clean_page(page):
+    
+    tag = re.compile(r'<[^>]+>')
+    soup = BeautifulSoup(page.text, 'html.parser').find_all('p')
+
+    paragraphs = []
+    for x in soup:
+        paragraphs.append(str(x))
+
+    paragraphs = ' '.join(paragraphs)
+    clean_text = re.sub(tag, '', paragraphs)
+
+    return clean_text
+
+def filter_page(url):
+    if ("arxiv" in url):
+        # Make a function for PDFs here
+        return True        
+
+def split_document(document, chunk_size=2000):
+    chunks = []
+    for i in range(0, len(document), chunk_size):
+        chunks.append(document[i:i+chunk_size])
+    return chunks
+
+def embeddings_model():
+    return "text-embedding-ada-002"
+
+def gpt_response(model, message):
+    model = "gpt-4"
+
+    return openai.ChatCompletion.create(
+                model=model,
+                messages=message
+            )
 
 
-if __name__ == "__main__":
+def upsert_documents(chunks, article, metadata, index):
 
-    print("heo")
+    # Creating embeddings for each document and preparing for upsert
+    upsert_items = []
+    for i, chunk in enumerate(chunks):
+        res = openai.Embedding.create(
+            input=chunk, 
+            engine=embeddings_model
+        )
+
+        embedding = [record['embedding'] for record in res['data']]
+        # Include the original document text in the metadata
+        document_metadata = metadata.copy()
+        document_metadata['original_text'] = article
+        upsert_items.append((f"{metadata['pagename']}-{i}", embedding[0], document_metadata))
+
+    # Upsert to Pinecone
+    index.upsert(upsert_items)
+
+def num_tokens_from_string(string: str, encoding_name: str) -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.encoding_for_model("gpt-4")
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
