@@ -10,7 +10,6 @@ import openai
 import tiktoken
 
 def get_links(urls):
-
     with webdriver.Chrome(service=ChromeService(ChromeDriverManager().install())) as driver:
         sources = []
 
@@ -36,8 +35,9 @@ def get_page(url):
     print(url, page.status_code)
     return page
 
+    
 def REST_codes():
-
+    # TODO
     return 1
 
 def clean_page(page):
@@ -57,6 +57,7 @@ def clean_page(page):
 def filter_page(url):
     if ("arxiv" in url):
         # Make a function for PDFs here
+        # TODO
         return True        
 
 def split_document(document, chunk_size=2000):
@@ -65,17 +66,18 @@ def split_document(document, chunk_size=2000):
         chunks.append(document[i:i+chunk_size])
     return chunks
 
+def split_sentences(document):
+    return document.split(". ")
+
 def embeddings_model():
     return "text-embedding-ada-002"
 
 def gpt_response(model, message):
-    model = "gpt-3.5-turbo-16k"
 
     return openai.ChatCompletion.create(
                 model=model,
                 messages=message
             )
-
 
 def upsert_documents(summary, metadata, index):
 
