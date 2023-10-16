@@ -69,7 +69,7 @@ def embeddings_model():
     return "text-embedding-ada-002"
 
 def gpt_response(model, message):
-    model = "gpt-4"
+    model = "gpt-3.5-turbo-16k"
 
     return openai.ChatCompletion.create(
                 model=model,
@@ -77,21 +77,21 @@ def gpt_response(model, message):
             )
 
 
-def upsert_documents(chunks, article, metadata, index):
+def upsert_documents(summary, metadata, index):
 
     # Creating embeddings for each document and preparing for upsert
     upsert_items = []
-    for i, chunk in enumerate(chunks):
-        res = openai.Embedding.create(
-            input=chunk, 
-            engine=embeddings_model
-        )
+    
+    res = openai.Embedding.create(
+        input=summary, 
+        engine=embeddings_model
+    )
 
-        embedding = [record['embedding'] for record in res['data']]
-        # Include the original document text in the metadata
-        document_metadata = metadata.copy()
-        document_metadata['original_text'] = article
-        upsert_items.append((f"{metadata['pagename']}-{i}", embedding[0], document_metadata))
+    embedding = [record['embedding'] for record in res['data']]
+    # Include the original document text in the metadata
+    document_metadata = metadata.copy()
+    document_metadata['original_text'] = summary
+    upsert_items.append((f"{metadata['pagename']}", embedding[0], document_metadata))
 
     # Upsert to Pinecone
     index.upsert(upsert_items)
