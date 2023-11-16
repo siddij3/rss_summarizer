@@ -30,7 +30,6 @@ def get_links(urls):
 
 
 def get_page(url):
-
     page = requests.get(url)
     print(url, page.status_code)
     return page
@@ -41,7 +40,6 @@ def REST_codes():
     return 1
 
 def clean_page(page):
-    
     tag = re.compile(r'<[^>]+>')
     soup = BeautifulSoup(page.text, 'html.parser').find_all('p')
 
@@ -79,17 +77,12 @@ def gpt_response(model, message):
                 messages=message
             )
 
-def upsert_documents(summary, metadata, index):
+def upsert_documents(embeddings, summary, metadata, index):
 
     # Creating embeddings for each document and preparing for upsert
     upsert_items = []
     
-    res = openai.Embedding.create(
-        input=summary, 
-        engine=embeddings_model
-    )
-
-    embedding = [record['embedding'] for record in res['data']]
+    embedding = [record['embedding'] for record in embeddings]
     # Include the original document text in the metadata
     document_metadata = metadata.copy()
     document_metadata['original_text'] = summary

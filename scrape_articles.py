@@ -9,6 +9,7 @@ from libs import clean_page
 from libs import get_page
 from datetime import datetime
 
+
 import embeddings
 
 url = f"https://api.start.me/widgets/64657916,64619065,64814145/articles" 
@@ -21,9 +22,6 @@ date = datetime.today().strftime('%Y-%m-%d')
 
 pinecone.init(api_key=api.pinecone_key, environment="gcp-starter")
 index = pinecone.Index(index_name=index_name)
-
-tokenizer, embedings_model = embeddings.load_model_embeddings()
-
 
 if __name__ == "__main__":
     rss_all = get_links([url, url2])
@@ -54,27 +52,31 @@ if __name__ == "__main__":
                 # libs.upsert_documents(chunks, clean_text, metadata, index)
                 print(len(chunks))
 
+
+            # Creating input to clean text from HTML/XML code for pure text
             messages_1 = [{"role": "system", "content": api.system_content},
                         {"role": "user", "content": f"{clean_text}"}]
             response1 = libs.gpt_response(model, messages_1)
             cleaned_article = response1.choices[0].message.content
 
+
+            # Uses LLM to summarizes article
             messages_2 = [{"role": "system", "content": api.system_content2},
                         {"role": "user", "content": cleaned_article}]
             response2 = libs.gpt_response(model, messages_2)
             summary = response2.choices[0].message.content
 
-            # Creating embeddings
+            # Creating embeddings to store into vector DB
             sentences = summary.split(". ")
-            embeddings = embeddings.create_embedding(tokenizer, embedings_model, sentences)
+            embeddings = embeddings.create_embedding(sentences)
 
             tmp = [url, str(response2.choices[0].message.content), date, '\n']
-            with open(f'messages - {date}.txt', 'a') as f:
+            with open(f'messages\m_{date}.txt', 'a') as f:
                 f.write(str(','.join(tmp)))
 
             embeddings_dict  = {**metadata, "embeddings": embeddings.tolist()}
 
-            with open(f'embeddings - {date}.txt', 'a') as f:
+            with open(f'embeddings\e_{date}.txt', 'a') as f:
                 f.write( str(embeddings_dict) )
 
             exit()
