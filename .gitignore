@@ -1,3 +1,5 @@
 api.py
 __pycache__
 messages*
+embeddings*
+IQ.py

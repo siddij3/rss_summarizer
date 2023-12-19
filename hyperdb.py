@@ -3,11 +3,47 @@ Sourced from: github.com/jdagdelen"""
 
 import gzip
 import pickle
-import embeddings
+
+from transformers import AutoTokenizer, AutoModel
+import torch
+import torch.nn.functional as F
+
 
 import numpy as np
 
-from hyperdb.galaxy_brain_math_shit import (
+MAX_BATCH_SIZE = 2048  
+
+#Mean Pooling - Take attention mask into account for correct averaging
+def mean_pooling(model_output, attention_mask):
+    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+
+def load_model_embeddings():
+    tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+    model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+
+    return tokenizer, model
+
+def create_embedding(sentences):
+    tokenizer, model = load_model_embeddings()
+
+    # Tokenize sentences
+    encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
+
+    # Compute token embeddings
+    with torch.no_grad():
+        model_output = model(**encoded_input)
+
+    # Perform pooling
+    sentence_embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
+
+    # Normalize embeddings
+    sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
+
+    return sentence_embeddings
+
+from vector_math import (
     dot_product,
     adams_similarity,
     cosine_similarity,
@@ -16,11 +52,8 @@ from hyperdb.galaxy_brain_math_shit import (
     hyper_SVM_ranking_algorithm_sort,
 )
 
-MAX_BATCH_SIZE = 2048  
-
-def get_embedding(documents, key=None, model="text-embedding-ada-002"):
-
-    return embeddings
+def get_embedding(sentences):
+    return create_embedding(sentences)
 
 class HyperDB:
     def __init__(
@@ -35,7 +68,7 @@ class HyperDB:
         self.documents = None
         self.vectors = None
         self.embedding_function = embedding_function or (
-            lambda docs: get_embedding(docs, key=key)
+            lambda docs: get_embedding(docs)
         )
         if vectors is not None:
             self.vectors = vectors

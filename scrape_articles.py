@@ -10,7 +10,8 @@ from libs import get_page
 from datetime import datetime
 
 
-import embeddings
+import hyperdb
+from hyperdb import HyperDB
 
 url = f"https://api.start.me/widgets/64657916,64619065,64814145/articles" 
 url2 = f"https://api.start.me/widgets/63871721/articles"
@@ -66,19 +67,24 @@ if __name__ == "__main__":
             response2 = libs.gpt_response(model, messages_2)
             summary = response2.choices[0].message.content
 
+
             # Creating embeddings to store into vector DB
             sentences = summary.split(". ")
-            embeddings = embeddings.create_embedding(sentences)
+            embeddings = hyperdb.create_embedding(sentences)
 
             tmp = [url, str(response2.choices[0].message.content), date, '\n']
             with open(f'messages\m_{date}.txt', 'a') as f:
                 f.write(str(','.join(tmp)))
 
             embeddings_dict  = {**metadata, "embeddings": embeddings.tolist()}
-
             with open(f'embeddings\e_{date}.txt', 'a') as f:
                 f.write( str(embeddings_dict) )
 
+            
+            
+            # Save  in the vector database
+            db = HyperDB(sentences, key="info.description")
+            db.save("demo/summaries.pickle.gz")
+
             exit()
    
-    #  Find a way to remove too large articles or reduce tokens, or find a number of tokens
