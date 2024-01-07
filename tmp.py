@@ -1,34 +1,60 @@
 from hyperdb import HyperDB
 import json
 
+import numpy as np
+import sys
+np.set_printoptions(threshold=sys.maxsize)
+from libs.libs import get_links
+from libs.libs import filter_page
+from libs.libs import get_page
+from libs.libs import REST_codes
+from libs.libs import get_with_header
+from datetime import datetime
+
+from bs4 import BeautifulSoup
+
+url = f"https://api.start.me/widgets/64657916,64619065,64814145/articles" 
+url2 = f"https://api.start.me/widgets/63871721/articles"
+technology_list = ["AI", "Technology", "Privacy", "Cybersecurity"]
+
+
 if __name__ == "__main__":
+    rss_all = get_links([url, url2])
 
-    documents = a
-    key = None
-    MAX_BATCH_SIZE = 2048  # OpenAI batch endpoint max size https://github.com/openai/openai-python/blob/main/openai/embeddings_utils.py#L43
+    forbidden_links = []
+    filtered_links = []
+    url = "https://www.marktechpost.com/2024/01/06/this-ai-paper-presents-a-comprehensive-study-of-knowledge-editing-for-large-language-models/"
 
-    if isinstance(documents, list):
-        if isinstance(documents[0], dict):
-            texts = []
-            if isinstance(key, str):
-                if "." in key:
-                    key_chain = key.split(".")
-                else:
-                    key_chain = [key]
-                for doc in documents:
-                    for key in key_chain:
-                        doc = doc[key]
-                    texts.append(doc.replace("\n", " "))
-            elif key is None:
-                for doc in documents:
-                    text = ", ".join([f"{key}: {value}" for key, value in doc.items()])
-                    texts.append(text)
-        elif isinstance(documents[0], str):
-            texts = documents
-    batches = [
-        texts[i : i + MAX_BATCH_SIZE] for i in range(0, len(texts), MAX_BATCH_SIZE)
-    ]
-    embeddings = []
-    for batch in batches:
-        print(batch)
-    pass
+    page = get_page(url)  
+
+    if not REST_codes(page.status_code):
+       get_with_header(url)
+
+
+
+    print(page.text)
+
+
+    # soup = BeautifulSoup(page.text, 'html.parser')
+
+    # print(soup)
+    # # for i, theme in enumerate(rss_all):
+    #     for entry in rss_all[theme]:
+            
+    #         date = datetime.today().strftime('%Y-%m-%d')
+
+    #         url = entry['url']
+    #         metadata = {"category": technology_list[i], "url": url, "pagename": entry['title'], "date": date}
+
+    #         if filter_page(url):
+    #             filtered_links.append(url) 
+    #         else:
+    #             continue
+
+    #         page = get_page(url)
+    #         if page.status_code == 403 :
+    #             forbidden_links.append(url)
+    #             continue
+
+
+
