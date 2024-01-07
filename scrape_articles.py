@@ -1,14 +1,14 @@
 from bs4 import BeautifulSoup
 
 import api
-import pinecone
+# import pinecone
 import libs
 from libs import get_links
 from libs import filter_page
 from libs import clean_page
 from libs import get_page
 from datetime import datetime
-
+import lib_embeddings
 
 import hyperdb
 from hyperdb import HyperDB
@@ -21,8 +21,8 @@ model = "gpt-3.5-turbo-16k"
 index_name = "rss"
 date = datetime.today().strftime('%Y-%m-%d')
 
-pinecone.init(api_key=api.pinecone_key, environment="gcp-starter")
-index = pinecone.Index(index_name=index_name)
+# pinecone.init(api_key=api.pinecone_key, environment="gcp-starter")
+# index = pinecone.Index(index_name=index_name)
 
 if __name__ == "__main__":
     rss_all = get_links([url, url2])
@@ -38,6 +38,8 @@ if __name__ == "__main__":
 
             if filter_page(url):
                 filtered_links.append(url) 
+            else:
+                continue
 
             page = get_page(url)
             if page.status_code == 403 :
@@ -46,11 +48,11 @@ if __name__ == "__main__":
 
             clean_text = clean_page(page)
 
+            ####################################
             
-            num_tokens = libs.num_tokens_from_string(clean_text, model)
+            num_tokens = lib_embeddings.num_tokens_from_string(clean_text, model)
             if  num_tokens > 16300: #limit is 16,385 
                 chunks = libs.split_document(clean_text)
-                # libs.upsert_documents(chunks, clean_text, metadata, index)
                 print(len(chunks))
 
 
@@ -61,30 +63,25 @@ if __name__ == "__main__":
             cleaned_article = response1.choices[0].message.content
 
 
+
             # Uses LLM to summarizes article
             messages_2 = [{"role": "system", "content": api.system_content2},
                         {"role": "user", "content": cleaned_article}]
             response2 = libs.gpt_response(model, messages_2)
             summary = response2.choices[0].message.content
 
+            #Update Meta data
 
-            # Creating embeddings to store into vector DB
-            sentences = summary.split(". ")
-            embeddings = hyperdb.create_embedding(sentences)
+            metadata["summary"] = summary
 
-            tmp = [url, str(response2.choices[0].message.content), date, '\n']
-            with open(f'messages\m_{date}.txt', 'a') as f:
-                f.write(str(','.join(tmp)))
+            lib_embeddings.write_to_file(metadata)
 
-            embeddings_dict  = {**metadata, "embeddings": embeddings.tolist()}
-            with open(f'embeddings\e_{date}.txt', 'a') as f:
-                f.write( str(embeddings_dict) )
-
-            
+            ##########################################
+            # TODO
+            # 1. Store into vector DB after scraping is completed.
+            # 2. When re-scraping, search urls and make sure I'm not scraping duplicates
+            # 3. 
             
             # Save  in the vector database
-            db = HyperDB(sentences, key="info.description")
-            db.save("demo/summaries.pickle.gz")
-
-            exit()
+    
    

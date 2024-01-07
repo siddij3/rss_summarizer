@@ -4,44 +4,14 @@ Sourced from: github.com/jdagdelen"""
 import gzip
 import pickle
 
-from transformers import AutoTokenizer, AutoModel
-import torch
-import torch.nn.functional as F
 
+import libs.libs as libs
 
 import numpy as np
 
 MAX_BATCH_SIZE = 2048  
 
-#Mean Pooling - Take attention mask into account for correct averaging
-def mean_pooling(model_output, attention_mask):
-    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
-    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
-def load_model_embeddings():
-    tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-    model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-
-    return tokenizer, model
-
-def create_embedding(sentences):
-    tokenizer, model = load_model_embeddings()
-
-    # Tokenize sentences
-    encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
-
-    # Compute token embeddings
-    with torch.no_grad():
-        model_output = model(**encoded_input)
-
-    # Perform pooling
-    sentence_embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
-
-    # Normalize embeddings
-    sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
-
-    return sentence_embeddings
 
 from vector_math import (
     dot_product,
@@ -52,9 +22,61 @@ from vector_math import (
     hyper_SVM_ranking_algorithm_sort,
 )
 
-def get_embedding(sentences):
-    return create_embedding(sentences)
+def get_embedding(documents, key=None, model="text-embedding-ada-002"):
+    """Default embedding function that uses OpenAI Embeddings."""
+    if isinstance(documents, list):
+        if isinstance(documents[0], dict):
+            texts = []
+            if isinstance(key, str):
+                if "." in key:
+                    key_chain = key.split(".")
+                else:
+                    key_chain = [key]
+                for doc in documents:
+                    for key in key_chain:
+                        doc = doc[key]
+                    texts.append(doc.replace("\n", " "))
+            elif key is None:
+                for doc in documents:
+                    text = ", ".join([f"{key}: {value}" for key, value in doc.items()])
+                    texts.append(text)
+        elif isinstance(documents[0], str):
+            texts = documents
+    batches = [
+        texts[i : i + MAX_BATCH_SIZE] for i in range(0, len(texts), MAX_BATCH_SIZE)
+    ]
+    print(len(batches[0]))
+    embeddings = []
 
+
+    for batch in batches:
+        response = libs.gpt_embeddings (batch, model)
+
+        with open("Response_Output.txt", "w") as text_file:
+            print(f"{response}", file=text_file)
+
+        embeddings.extend(np.array(item["embedding"]) for item in response["data"])
+
+        with open("Embeddings_Output.txt", "w") as text_file:
+            print(f"{embeddings}", file=text_file)
+
+        exit()
+    return embeddings
+
+
+"""
+What this does is when it saves a pickle, it stores the entire vector and the
+text into one file
+
+When inputing a search query, it encodes the query, 
+searches the database, finds the index of the vector that matches that closest
+then uses that index and finds the matching article information
+
+It basically uses the index of the vector to map it to the appropriate pokemon.
+
+TODO: include all related search queries within a range.
+
+"""
 class HyperDB:
     def __init__(
         self,
@@ -65,10 +87,10 @@ class HyperDB:
         similarity_metric="cosine",
     ):
         documents = documents or []
-        self.documents = None
+        self.documents = []
         self.vectors = None
         self.embedding_function = embedding_function or (
-            lambda docs: get_embedding(docs)
+            lambda docs: get_embedding(docs, key=key)
         )
         if vectors is not None:
             self.vectors = vectors
