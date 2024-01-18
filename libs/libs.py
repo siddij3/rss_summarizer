@@ -60,7 +60,11 @@ def get_with_header(url):
     return True
 
 
-def clean_page(page):
+def clean_page(url, page):
+
+    if ("arxiv" in url):
+        return clean_arxiv(page)
+    
     tag = re.compile(r'<[^>]+>')
     soup = BeautifulSoup(page.text, 'html.parser').find_all('p')
 
@@ -73,9 +77,14 @@ def clean_page(page):
 
     return clean_text
 
+def clean_arxiv(page):
+
+    clean_text = BeautifulSoup(page.text, 'html.parser').find(property="og:description")['content']
+    return clean_text
+
 def filter_page(url):
     if ("arxiv" in url):
-        pass
+        return False        
         # Make a function for PDFs here
 
     elif ("marktechpost" in url):

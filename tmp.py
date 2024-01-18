@@ -19,42 +19,10 @@ technology_list = ["AI", "Technology", "Privacy", "Cybersecurity"]
 
 
 if __name__ == "__main__":
-    rss_all = get_links([url, url2])
 
-    forbidden_links = []
-    filtered_links = []
     url = "https://www.marktechpost.com/2024/01/06/this-ai-paper-presents-a-comprehensive-study-of-knowledge-editing-for-large-language-models/"
 
-    page = get_page(url)  
 
-    if not REST_codes(page.status_code):
-       get_with_header(url)
-
-
-
-    print(page.text)
-
-
-    # soup = BeautifulSoup(page.text, 'html.parser')
-
-    # print(soup)
-    # # for i, theme in enumerate(rss_all):
-    #     for entry in rss_all[theme]:
-            
-    #         date = datetime.today().strftime('%Y-%m-%d')
-
-    #         url = entry['url']
-    #         metadata = {"category": technology_list[i], "url": url, "pagename": entry['title'], "date": date}
-
-    #         if filter_page(url):
-    #             filtered_links.append(url) 
-    #         else:
-    #             continue
-
-    #         page = get_page(url)
-    #         if page.status_code == 403 :
-    #             forbidden_links.append(url)
-    #             continue
-
-
-
+    with open('summaries.txt') as f:
+      json_data = json.load(f)
+      print(json_data)

@@ -2,13 +2,13 @@ from bs4 import BeautifulSoup
 
 import api
 # import pinecone
-import libs
-from libs import get_links
-from libs import filter_page
-from libs import clean_page
-from libs import get_page
+import libs.libs as libs
+from libs.libs import get_links
+from libs.libs import filter_page
+from libs.libs import clean_page
+from libs.libs import get_page
 from datetime import datetime
-import lib_embeddings
+import libs.lib_embeddings as lib_embeddings
 
 import hyperdb
 from hyperdb import HyperDB
@@ -28,6 +28,7 @@ if __name__ == "__main__":
     rss_all = get_links([url, url2])
 
     forbidden_links = []
+    acceptable_links_count = 0
     filtered_links = []
 
     for i, theme in enumerate(rss_all):
@@ -36,17 +37,17 @@ if __name__ == "__main__":
             url = entry['url']
             metadata = {"category": technology_list[i], "url": url, "pagename": entry['title'], "date": date}
 
-            if filter_page(url):
-                filtered_links.append(url) 
-            else:
-                continue
+            # if filter_page(url):
+            #     filtered_links.append(url) 
+            # else:
+            #     continue
 
             page = get_page(url)
             if page.status_code == 403 :
                 forbidden_links.append(url)
                 continue
 
-            clean_text = clean_page(page)
+            clean_text = clean_page(url, page)
 
             ####################################
             
@@ -75,7 +76,7 @@ if __name__ == "__main__":
             metadata["summary"] = summary
 
             lib_embeddings.write_to_file(metadata)
-
+            acceptable_links_count += 1
             ##########################################
             # TODO
             # 1. Store into vector DB after scraping is completed.
@@ -84,4 +85,5 @@ if __name__ == "__main__":
             
             # Save  in the vector database
     
-   
+    print("forbidden_links count", len(forbidden_links))
+    print("acceptable_links_count", acceptable_links_count)
