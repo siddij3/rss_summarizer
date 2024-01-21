@@ -20,9 +20,19 @@ technology_list = ["AI", "Technology", "Privacy", "Cybersecurity"]
 
 if __name__ == "__main__":
 
-    url = "https://www.marktechpost.com/2024/01/06/this-ai-paper-presents-a-comprehensive-study-of-knowledge-editing-for-large-language-models/"
+   url = ["https://blog.google/technology/safety-security/google-account-recover/",
+          "http://arxiv.org/abs/2312.06008"]
+
+   documents = []
+   with open("summaries.txt", "r") as f:
+      for line in f:
+         documents.append(json.loads(line))
 
 
-    with open('summaries.txt') as f:
-      json_data = json.load(f)
-      print(json_data)
+   duplicates  = [x for x in documents if x["url"] in url]
+
+   for link in duplicates:
+      print(link['url'])
+      url.remove(link['url'])
+
+   print(url)

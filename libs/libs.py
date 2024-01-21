@@ -82,15 +82,36 @@ def clean_arxiv(page):
     clean_text = BeautifulSoup(page.text, 'html.parser').find(property="og:description")['content']
     return clean_text
 
-def filter_page(url):
-    if ("arxiv" in url):
-        return False        
-        # Make a function for PDFs here
+def remove_duplicates(urls):
+    from collections import ChainMap
+    documents = []
 
-    elif ("marktechpost" in url):
-        # filter with meta instead of p.
-        # TODO
-        return False        
+    with open("summaries.txt", "r") as f:
+        for line in f:
+            documents.append(json.loads(line))
+
+    in_file  = [x['url'] for x in documents]
+    
+    dict = {}
+
+    for key, value in urls.items():
+        new_rss_links = []
+        for article in value:
+            new_rss_links.append( {
+                "url" :article['url'],
+                "title" :  article["title"]
+            })
+        
+        dict[str(key)] = new_rss_links
+
+    
+    for key, value in dict.items():
+        for article in dict[key]:
+            if article['url'] in in_file:
+                dict[key].remove(article)
+    
+    return dict
+    
 
 def split_document(document, chunk_size=2000):
     chunks = []

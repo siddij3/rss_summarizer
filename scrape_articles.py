@@ -4,14 +4,12 @@ import api
 # import pinecone
 import libs.libs as libs
 from libs.libs import get_links
-from libs.libs import filter_page
 from libs.libs import clean_page
 from libs.libs import get_page
+from libs.libs import remove_duplicates
 from datetime import datetime
 import libs.lib_embeddings as lib_embeddings
 
-import hyperdb
-from hyperdb import HyperDB
 
 url = f"https://api.start.me/widgets/64657916,64619065,64814145/articles" 
 url2 = f"https://api.start.me/widgets/63871721/articles"
@@ -27,20 +25,19 @@ date = datetime.today().strftime('%Y-%m-%d')
 if __name__ == "__main__":
     rss_all = get_links([url, url2])
 
+
+    rss_links = remove_duplicates(rss_all)
+    del(rss_all)
+
     forbidden_links = []
     acceptable_links_count = 0
     filtered_links = []
 
-    for i, theme in enumerate(rss_all):
-        for entry in rss_all[theme]:
+    for i, theme in enumerate(rss_links):
+        for entry in rss_links[theme]:
 
             url = entry['url']
             metadata = {"category": technology_list[i], "url": url, "pagename": entry['title'], "date": date}
-
-            # if filter_page(url):
-            #     filtered_links.append(url) 
-            # else:
-            #     continue
 
             page = get_page(url)
             if page.status_code == 403 :
