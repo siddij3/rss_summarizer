@@ -2,6 +2,14 @@ import json
 from hyperdb import HyperDB
 import api
 
+def format_entry(article):
+    category = article["category"]
+    url = article["url"]
+    pagename = article["pagename"]
+    date = article["date"]
+    summary = article["summary"]
+    description = article["description"]
+
 if __name__ == '__main__':
 
     documents = []
@@ -25,6 +33,6 @@ if __name__ == '__main__':
     db.load("rss_articles.pickle.gz")
 
 
-    results = db.query("sleep.", top_k=5)
+    results = db.query("lawsuits and patents", top_k=5)
 
     print(results)
