@@ -122,8 +122,6 @@ def split_document(document, chunk_size=2000):
 def split_sentences(document):
     return document.split(". ")
 
-def embeddings_model():
-    return "text-embedding-ada-002"
 
 def gpt_response(model, message):
     return openai.ChatCompletion.create(

@@ -1,22 +1,30 @@
 import json
 from hyperdb import HyperDB
-
+import api
 
 if __name__ == '__main__':
 
     documents = []
-    with open("summaries.txt", "r") as f:
+    
+    pokemon = 'pokemon.jsonl'
+    poke_key = "info.description"
+
+    mine = 'summaries.txt'
+    mine_keys = "summary"
+    with open(mine, "r") as f:
         for line in f:
             documents.append(json.loads(line))
 
-    db = HyperDB(documents, key="summary")
+    
+    
+    db = HyperDB(documents, key=mine_keys)
+    # print(db)
+    db.save("rss_articles.pickle.gz")
 
-    db.save("demo/rss_articles.pickle.gz")
+
+    db.load("rss_articles.pickle.gz")
 
 
-    db.load("demo/rss_articles.pickle.gz")
-
-
-    results = db.query("Markov.", top_k=5)
+    results = db.query("sleep.", top_k=5)
 
     print(results)

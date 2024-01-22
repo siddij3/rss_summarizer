@@ -19,9 +19,6 @@ model = "gpt-3.5-turbo-16k"
 index_name = "rss"
 date = datetime.today().strftime('%Y-%m-%d')
 
-# pinecone.init(api_key=api.pinecone_key, environment="gcp-starter")
-# index = pinecone.Index(index_name=index_name)
-
 if __name__ == "__main__":
     rss_all = get_links([url, url2])
 
@@ -77,7 +74,7 @@ if __name__ == "__main__":
             ##########################################
             # TODO
             # 1. Store into vector DB after scraping is completed.
-            # 2. When re-scraping, search urls and make sure I'm not scraping duplicates
+            # 2. When re-scraping, search urls and make sure I'm not scraping duplicates done
             # 3. 
             
             # Save  in the vector database

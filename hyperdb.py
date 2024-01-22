@@ -6,10 +6,12 @@ import pickle
 
 
 import libs.libs as libs
+import libs.lib_embeddings as lib_embeddings
 
 import numpy as np
+from  api import openai
 
-MAX_BATCH_SIZE = 2048  
+MAX_BATCH_SIZE = 2048    
 
 
 
@@ -24,8 +26,10 @@ from vector_math import (
 
 def get_embedding(documents, key=None, model="text-embedding-ada-002"):
     """Default embedding function that uses OpenAI Embeddings."""
+
     if isinstance(documents, list):
         if isinstance(documents[0], dict):
+ 
             texts = []
             if isinstance(key, str):
                 if "." in key:
@@ -36,31 +40,41 @@ def get_embedding(documents, key=None, model="text-embedding-ada-002"):
                     for key in key_chain:
                         doc = doc[key]
                     texts.append(doc.replace("\n", " "))
+
             elif key is None:
                 for doc in documents:
                     text = ", ".join([f"{key}: {value}" for key, value in doc.items()])
                     texts.append(text)
         elif isinstance(documents[0], str):
             texts = documents
+            
+    
     batches = [
         texts[i : i + MAX_BATCH_SIZE] for i in range(0, len(texts), MAX_BATCH_SIZE)
     ]
-    print(len(batches[0]))
+    
     embeddings = []
 
+    i = 0
+    # Seperate each article in an index
+    for summary in texts:     
+        print(i)
+        i+=1
+        response = lib_embeddings.create_embedding(summary)[0]
 
-    for batch in batches:
-        response = libs.gpt_embeddings (batch, model)
+        # print(embeddings)
 
-        with open("Response_Output.txt", "w") as text_file:
-            print(f"{response}", file=text_file)
+        # response = openai.Embedding.create(input=batch, model=model)
 
-        embeddings.extend(np.array(item["embedding"]) for item in response["data"])
+        # with open("Response_Output.txt", "w") as text_file:
+        #     print(f"{response}", file=text_file)
 
-        with open("Embeddings_Output.txt", "w") as text_file:
-            print(f"{embeddings}", file=text_file)
+        embeddings.append(np.array(response))
 
-        exit()
+        # with open("Embeddings_Output.txt", "w") as text_file:
+        #     print(f"{embeddings}", file=text_file)
+
+
     return embeddings
 
 
@@ -73,8 +87,6 @@ searches the database, finds the index of the vector that matches that closest
 then uses that index and finds the matching article information
 
 It basically uses the index of the vector to map it to the appropriate pokemon.
-
-TODO: include all related search queries within a range.
 
 """
 class HyperDB:

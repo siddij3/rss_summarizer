@@ -2,6 +2,7 @@ from hyperdb import HyperDB
 import json
 
 import numpy as np
+import api
 import sys
 np.set_printoptions(threshold=sys.maxsize)
 from libs.libs import get_links
@@ -16,23 +17,21 @@ from bs4 import BeautifulSoup
 url = f"https://api.start.me/widgets/64657916,64619065,64814145/articles" 
 url2 = f"https://api.start.me/widgets/63871721/articles"
 technology_list = ["AI", "Technology", "Privacy", "Cybersecurity"]
+model = "gpt-3.5-turbo-16k"
 
 
 if __name__ == "__main__":
+    documents = []
+    with open("summaries.txt", "r") as f:
+        for line in f:
+            documents.append(json.loads(line))
 
-   url = ["https://blog.google/technology/safety-security/google-account-recover/",
-          "http://arxiv.org/abs/2312.06008"]
+    db = HyperDB(documents, key="summary")
 
-   documents = []
-   with open("summaries.txt", "r") as f:
-      for line in f:
-         documents.append(json.loads(line))
+    db.save("demo/rss_articles.pickle.gz")
 
 
-   duplicates  = [x for x in documents if x["url"] in url]
+    db.load("demo/rss_articles.pickle.gz")
 
-   for link in duplicates:
-      print(link['url'])
-      url.remove(link['url'])
 
-   print(url)
+    results = db.query("Markov.", top_k=5)
