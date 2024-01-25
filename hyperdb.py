@@ -5,8 +5,8 @@ import gzip
 import pickle
 
 
-import libs.libs as libs
-import libs.lib_embeddings as lib_embeddings
+import libs.site_handler as site_handler
+import libs.embeddings as embeddings
 
 import numpy as np
 from  api import openai
@@ -41,7 +41,7 @@ def get_embedding(documents, key=None, model="text-embedding-ada-002"):
                         doc = doc[key]
                     texts.append(doc.replace("\n", " "))
 
-            elif key is None:
+            elif key is None:  #I think this is where it goes mostly
                 for doc in documents:
                     text = ", ".join([f"{key}: {value}" for key, value in doc.items()])
                     texts.append(text)
@@ -57,22 +57,21 @@ def get_embedding(documents, key=None, model="text-embedding-ada-002"):
 
     i = 0
     # Seperate each article in an index
-    for summary in texts:     
-        print(i)
-        i+=1
-        response = lib_embeddings.create_embedding(summary)[0]
+    embeddings = [np.array(embeddings.create_embedding(summary)[0]) for summary in texts]
+    # for summary in texts:     
+    #     response = 
 
-        # print(embeddings)
+    #     # print(embeddings)
 
-        # response = openai.Embedding.create(input=batch, model=model)
+    #     # response = openai.Embedding.create(input=batch, model=model)
 
-        # with open("Response_Output.txt", "w") as text_file:
-        #     print(f"{response}", file=text_file)
+    #     # with open("Response_Output.txt", "w") as text_file:
+    #     #     print(f"{response}", file=text_file)
 
-        embeddings.append(np.array(response))
+    #     embeddings.append(np.array(response))
 
-        # with open("Embeddings_Output.txt", "w") as text_file:
-        #     print(f"{embeddings}", file=text_file)
+    #     # with open("Embeddings_Output.txt", "w") as text_file:0
+    #     #     print(f"{embeddings}", file=text_file)
 
 
     return embeddings

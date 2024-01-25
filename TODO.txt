@@ -1,0 +1,7 @@
+1. Transfer article summaries to SQL
+    a. Transfer embeddings into MySQL
+    b. Use MySQL indexing with incrementing numbers
+2. Transition topic analysis away from OpenAI modelling into something more local and cheaper or more efficient
+3. Remove requirement to convert every article into an embedding in hypberdb
+4. Make SQL Manager a Class
+5. Make site_handler a class?

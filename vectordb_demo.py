@@ -5,11 +5,11 @@ import numpy as np
 import api
 import sys
 np.set_printoptions(threshold=sys.maxsize)
-from libs.libs import get_links
-from libs.libs import filter_page
-from libs.libs import get_page
-from libs.libs import REST_codes
-from libs.libs import get_with_header
+from libs.site_handler import get_links
+from libs.site_handler import filter_page
+from libs.site_handler import get_page
+from libs.site_handler import REST_codes
+from libs.site_handler import get_with_header
 from datetime import datetime
 
 from bs4 import BeautifulSoup
@@ -27,11 +27,6 @@ if __name__ == "__main__":
             documents.append(json.loads(line))
 
     db = HyperDB(documents, key="summary")
-
     db.save("demo/rss_articles.pickle.gz")
-
-
     db.load("demo/rss_articles.pickle.gz")
-
-
     results = db.query("Markov.", top_k=5)

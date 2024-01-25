@@ -22,17 +22,14 @@ if __name__ == '__main__':
     with open(mine, "r") as f:
         for line in f:
             documents.append(json.loads(line))
-
-    
-    
+  
     db = HyperDB(documents, key=mine_keys)
-    # print(db)
+    
     db.save("rss_articles.pickle.gz")
-
-
     db.load("rss_articles.pickle.gz")
 
 
     results = db.query("lawsuits and patents", top_k=5)
 
     print(results)
+
