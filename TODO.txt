@@ -1,7 +1,33 @@
-1. Transfer article summaries to SQL
-    a. Transfer embeddings into MySQL
-    b. Use MySQL indexing with incrementing numbers
-2. Transition topic analysis away from OpenAI modelling into something more local and cheaper or more efficient
-3. Remove requirement to convert every article into an embedding in hypberdb
-4. Make SQL Manager a Class
-5. Make site_handler a class?
+1. Transition topic analysis away from OpenAI modelling into something more local and cheaper or more efficient
+2. Increase functionality of hyperdb
+3. Make site_handler a class?
+4. I need something that makes a supercategory based on categories themselves to cluster queries easier
+
+https://huggingface.co/spaces/Celestinian/Topic-Detection
+
+------------------
+1. Pull titles of RSS feeds
+        - Categorize based on these
+
+eg. 50 articles. pull titles of all those articles
+categorize each article based on its title
+
+Harmonize categories based on similar topics
+(GPT 105 - look at some of these things)
+
+Title - category -> We find a genus for several category titles
+
+Title, Url, Summary, category
+
+Scrape RSS feeds and display everything based on the last 24 hours. 
+It auto-categorizes the topics from that day so simplifiy
+
+Eg.
+
+Potatos:
+> Summary of 5 articles
+urls and titles:
+
+Llamas:
+> Summary of 6 articles
+urls and titles:

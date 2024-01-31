@@ -7,6 +7,13 @@ from sentence_transformers import SentenceTransformer
 from sqlalchemy import insert
 
 
+# from sklearn.feature_extraction.text import CountVectorizer
+# from nltk.corpus import stopwords
+# from sentence_transformers import SentenceTransformer
+# from umap import UMAP
+# from hdbscan import HDBSCAN
+# from bertopic import BERTopic
+
 if __name__ == '__main__':
 
     topic_model = BERTopic.load("MaartenGr/BERTopic_ArXiv")

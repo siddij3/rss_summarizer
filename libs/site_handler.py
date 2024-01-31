@@ -60,10 +60,10 @@ def get_with_header(url):
     return True
 
 
-def clean_page(url, page):
+def clean_page(url, page, title):
 
     if ("arxiv" in url):
-        return clean_arxiv(page)
+        return clean_arxiv(page, title)
     
     tag = re.compile(r'<[^>]+>')
     soup = BeautifulSoup(page.text, 'html.parser').find_all('p')
@@ -75,12 +75,14 @@ def clean_page(url, page):
     paragraphs = ' '.join(paragraphs)
     clean_text = re.sub(tag, '', paragraphs)
 
-    return clean_text
+    return clean_text, title
 
-def clean_arxiv(page):
+def clean_arxiv(page, title):
 
     clean_text = BeautifulSoup(page.text, 'html.parser').find(property="og:description")['content']
-    return clean_text
+    
+    title = title.split("(arX   ")[0]
+    return clean_text, title
 
 def remove_duplicates(urls):
     from collections import ChainMap

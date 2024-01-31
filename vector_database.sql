@@ -11,7 +11,6 @@ CREATE TABLE summary (
 ); 
 CREATE TABLE metadata (
     category VARCHAR(255) NOT NULL,
-    sub_category VARCHAR(255) NOT NULL,
     url VARCHAR (255) NOT NULL,
     title VARCHAR (255) NOT NULL,
     summary_id int NOT NULL AUTO_INCREMENT,
@@ -21,6 +20,13 @@ CREATE TABLE metadata (
 
 CREATE TABLE embeddings (
     summary_id int NOT NULL AUTO_INCREMENT ,
-    vector BLOB (65535) NOT NULL,
+    summary_vector BLOB (65535) NOT NULL,
+    category_vector BLOB (65535) NOT NULL,
     FOREIGN KEY (summary_id) REFERENCES  summary(id)
+); 
+
+CREATE TABLE categories (
+    category VARCHAR (255) NOT NULL ,
+    category_vector BLOB (65535) NOT NULL,
+    FOREIGN KEY (category) REFERENCES metadata(category)
 ); 

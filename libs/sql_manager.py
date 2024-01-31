@@ -7,6 +7,7 @@ from libs.embeddings import create_embedding
 from libs.embeddings import load_model_embeddings
 from sqlalchemy import create_engine
 from sqlalchemy import text
+import pickle
 
 
 def write_to_sql(doc):
@@ -52,8 +53,8 @@ def write_to_sql(doc):
                                      " VALUES (%(summary_id)s, %(summary_vector)s, %(category_vector)s)")
     data_embeddings = {
         "summary_id": None,
-        "summary_vector": str(create_embedding(tokenizer, model, summary)[0].numpy().dumps()),
-        "category_vector": str(create_embedding(tokenizer, model, category)[0].numpy().dumps())
+        "summary_vector": pickle.dumps(create_embedding(tokenizer, model, summary)[0].numpy()),
+        "category_vector": pickle.dumps(create_embedding(tokenizer, model, category)[0].numpy())
     }
     mycursor.execute(query_embeddings, data_embeddings)
     
@@ -62,16 +63,14 @@ def write_to_sql(doc):
                                      " VALUES (%(category)s, %(category_vector)s)")
     data_categories = {
         "category": category,
-        "category_vector": str(create_embedding(tokenizer, model, category)[0].numpy().dumps())
+        "category_vector": pickle.dumps(create_embedding(tokenizer, model, category)[0].numpy())
     }
     mycursor.execute(query_categories, data_categories)
 
 
-    mycursor.closer()
+    mycursor.close()
     mydb.commit()
     mydb.close() 
-
-
 
     return True
 
@@ -99,11 +98,16 @@ class SQLManager:
                 auth_plugin=self.auth_plugin
                 )
 
-    
+    def end_connection(self):
+        self.mydb.close()
 
-    def connect(self):
+    def cursor(self):
         self.mycursor = self.mydb.cursor()
-    
+
+
+    def commit(self):
+        self.mydb.commit()
+        # self.mycursor.close()
 
     def connect_sqlalchemy(self):
         con = f'mysql+pymysql://{self.user}:{self.password}@{self.host}/{self.database}'
@@ -133,8 +137,8 @@ class SQLManager:
         output = pd.read_sql_table(table_name, 
                                    con=self.connect_sqlalchemy())
 
-        if "index" in output.keys():
-            output = output.drop(["index"], axis = 1)
+        # if "index" in output.keys():
+        #     output = output.drop(["index"], axis = 1)
 
         if "level_0" in output.keys():
             output = output.drop(["level_0"], axis = 1)
