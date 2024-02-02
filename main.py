@@ -8,18 +8,16 @@ from libs.sql_manager import SQLManager
 from libs.embeddings import create_embedding
 import pickle
 
-date = datetime.today().strftime('%Y-%m-%d')
+
 
 from libs.embeddings import load_model_embeddings
 
 
     
 if __name__ == '__main__':
+    date = datetime.today().strftime('%Y-%m-%d')
 
-
-# # Keep the scraping and the SQL stuff decoupled.
     article_scraper = Scraper(urls.rss_urls)
-    
     # article_scraper.categorize()
     documents = article_scraper.get_metadata() #dictionary class
 

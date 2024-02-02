@@ -1,77 +1,7 @@
 import pandas as pd
-
 from sqlalchemy import create_engine
 from sqlalchemy import text
 import mysql.connector
-from libs.embeddings import create_embedding
-from libs.embeddings import load_model_embeddings
-from sqlalchemy import create_engine
-from sqlalchemy import text
-import pickle
-
-
-def write_to_sql(doc):
-
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="junaid",
-        password="junaid",
-        database="rss_feeds",
-        auth_plugin='mysql_native_password'
-    )
-
-    mycursor = mydb.cursor()
-    tokenizer, model = load_model_embeddings()
-
- 
-    summary = doc["summary"]
-    category = doc['category']
-
-    query_summary = "INSERT INTO Summary (id, summary) VALUES (%(id)s, %(summary)s)"
-    data_summary = {
-        "id": None,
-        "summary": summary
-    }
-    mycursor.execute(query_summary, data_summary)
-    # mydb.commit()
-
-    #TODO include super_category somehow eventually
-    query_metadata = ("INSERT INTO Metadata (category,     url,    title,     summary_id,      date_published)" 
-                                 "VALUES (%(category)s,  %(url)s, %(title)s, %(summary_id)s, %(date_published)s)")
-    data_metadata  = {
-        "category": category,
-        "url" : doc['url'] ,
-        "title": doc['title'],
-        "summary_id" :None,
-        "date_published": doc["date"]
-    }
-    mycursor.execute(query_metadata, data_metadata)
-    # mydb.commit()
-    
-    query_embeddings = ("INSERT INTO Embeddings (summary_id,     summary_vector,     category_vector) " 
-                                     " VALUES (%(summary_id)s, %(summary_vector)s, %(category_vector)s)")
-    data_embeddings = {
-        "summary_id": None,
-        "summary_vector": pickle.dumps(create_embedding(tokenizer, model, summary)[0].numpy()),
-        "category_vector": pickle.dumps(create_embedding(tokenizer, model, category)[0].numpy())
-    }
-    mycursor.execute(query_embeddings, data_embeddings)
-    
-
-    query_categories = ("INSERT INTO categories (category,     category_vector) " 
-                                     " VALUES (%(category)s, %(category_vector)s)")
-    data_categories = {
-        "category": category,
-        "category_vector": pickle.dumps(create_embedding(tokenizer, model, category)[0].numpy())
-    }
-    mycursor.execute(query_categories, data_categories)
-
-
-    mycursor.close()
-    mydb.commit()
-    mydb.close() 
-
-    return True
 
 class SQLManager:
     def __init__(   self,
@@ -100,6 +30,7 @@ class SQLManager:
         self.mycursor = self.mydb.cursor()
 
     def end_connection(self):
+        self.mycursor.close()
         self.mydb.close()
 
     def cursor(self):
