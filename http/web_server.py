@@ -3,7 +3,7 @@ import time
 
 hostName = "localhost"
 serverPort = 8080
-
+# https://chat.openai.com/c/f63e4813-5ea7-4561-b2a6-a35ee01f3afc
 class MyServer(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)

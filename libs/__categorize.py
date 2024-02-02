@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     # docs = []
     # for doc in documents:
-    #     docs.append(doc[ "pagename"] )
+    #     docs.append(doc[ "title"] )
 
 
     # sentence_model = SentenceTransformer("all-MiniLM-L6-v2")

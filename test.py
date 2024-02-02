@@ -13,11 +13,11 @@ import pandas as pd
 if __name__ == "__main__":
 
   
-
+    # THis queries DB 
     sql_manager = SQLManager()
     sql_manager.cursor()
 
-   
+    # For removing duplicate links TODO
     embeddings = sql_manager.sql_to_pandas("embeddings")
     summary = sql_manager.sql_to_pandas("summary")
     metadata = sql_manager.sql_to_pandas("metadata")

@@ -7,9 +7,9 @@ import libs.site_handler as site_handler
 from libs.site_handler import get_links
 import libs.embeddings as embeddings
 import requests
+from datetime import datetime
 
 import feedparser
-import libs.sql_manager as sql_manager
 
 
 # NO VECTORS IN THIS CLASS
@@ -32,17 +32,17 @@ class Scraper:
                 self.feed.append(entry)
 
         # self.urls = remove_duplicates(self.urls)
-        # self.date = datetime.today().strftime('%Y-%m-%d')
+        date = datetime.today().strftime('%Y-%m-%d')
                 
         self.forbidden = []
 
         num_titles = len(self.feed)
-        self.metadata = {}  # TODO (urls, pagenames, entries, dates) just like a pandas df
+        self.metadata = {}  # TODO (urls, titles, entries, dates) just like a pandas df
         self.metadata["url"] = [self.feed[i].link for i in range(num_titles)]
 
-        self.metadata["pagename"] = [self.feed[i].title for i in range(num_titles)]
+        self.metadata["title"] = [self.feed[i].title for i in range(num_titles)]
         self.metadata["summary"] = [self.feed[i].summary if self.feed[i].summary is not None else None for i in range(num_titles)]
-        self.metadata["date"] = [self.feed[i].published  if self.feed[i].published is not None else None for i in range(num_titles)]
+        self.metadata["date"] = [date for i in range(num_titles)]
         self.metadata["author"] = [[author.name for author in self.feed[i].authors]  if self.feed[i].authors is not None else None for i in range(num_titles)]
 
         self.categories = []                   
@@ -98,12 +98,10 @@ class Scraper:
         # This is to get the summaries if there is none
         page = requests.get(url)
         
-
         if site_handler.REST_codes(page.status_code) is False:
             self.forbidden.append(url)
             return None
 
-        
         if ("arxiv" in url):
             clean_text = BeautifulSoup(page.text, 'html.parser').find(property="og:description")['content']
             title = title.split("(arX   ")[0]

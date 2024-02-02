@@ -53,5 +53,5 @@ if __name__ == "__main__":
     #         documents.append(json.loads(line))
 
     # sql_manager.insert_summary(tmp["summary"])
-    # sql_manager.insert_metadata(tmp["category"], tmp["url"], tmp["pagename"], tmp["date"])
+    # sql_manager.insert_metadata(tmp["category"], tmp["url"], tmp["title"], tmp["date"])
     # sql_manager.commit()  

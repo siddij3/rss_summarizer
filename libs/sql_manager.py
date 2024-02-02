@@ -32,7 +32,6 @@ def write_to_sql(doc):
         "id": None,
         "summary": summary
     }
-
     mycursor.execute(query_summary, data_summary)
     # mydb.commit()
 
@@ -42,7 +41,7 @@ def write_to_sql(doc):
     data_metadata  = {
         "category": category,
         "url" : doc['url'] ,
-        "title": doc['pagename'],
+        "title": doc['title'],
         "summary_id" :None,
         "date_published": doc["date"]
     }
@@ -58,7 +57,7 @@ def write_to_sql(doc):
     }
     mycursor.execute(query_embeddings, data_embeddings)
     
-    
+
     query_categories = ("INSERT INTO categories (category,     category_vector) " 
                                      " VALUES (%(category)s, %(category_vector)s)")
     data_categories = {
@@ -98,12 +97,13 @@ class SQLManager:
                 auth_plugin=self.auth_plugin
                 )
 
+        self.mycursor = self.mydb.cursor()
+
     def end_connection(self):
         self.mydb.close()
 
     def cursor(self):
-        self.mycursor = self.mydb.cursor()
-
+        return self.mycursor
 
     def commit(self):
         self.mydb.commit()
@@ -111,13 +111,11 @@ class SQLManager:
 
     def connect_sqlalchemy(self):
         con = f'mysql+pymysql://{self.user}:{self.password}@{self.host}/{self.database}'
-        engine = create_engine(
+        self.engine = create_engine(
             con, 
             pool_recycle=3600)
-        
-        return engine
-    
 
+    
     def execute_query(self, query, data=None):
         if data == None:
             self.mycursor.execute(query)
@@ -136,24 +134,18 @@ class SQLManager:
     def sql_to_pandas(self, table_name):
         output = pd.read_sql_table(table_name, 
                                    con=self.connect_sqlalchemy())
-
-        # if "index" in output.keys():
-        #     output = output.drop(["index"], axis = 1)
-
-        if "level_0" in output.keys():
-            output = output.drop(["level_0"], axis = 1)
-
         
         return output
     
-    def insert_metadata(self, category, url, title, date):
-        query = ("INSERT INTO Metadata (category,      url,     title,     summary_id,     date_published)" 
-                             "VALUES (%(category)s,  %(url)s, %(title)s, %(summary_id)s, %(date_published)s)")
+    def insert_metadata(self, category, url, title, author, date):
+        query = ("INSERT INTO Metadata (category,      url,     title,     summary_id,     author,      date_published)" 
+                             "VALUES (%(category)s,  %(url)s, %(title)s, %(summary_id)s,  %(author)s, %(date_published)s)")
         data  = {
                   "category": category,
                       "url" : url,
                      "title": title,
                "summary_id" : None,
+               "author": author, 
             "date_published": date
         }
         self.mycursor.execute(query, data)
@@ -178,7 +170,6 @@ class SQLManager:
             "category_vector": category_vector
         }
         self.mycursor.execute(query, data)
-    
     
  
     def insert_category(self, category, category_vector):
