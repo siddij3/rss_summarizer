@@ -1,10 +1,15 @@
 1. Transition topic analysis away from OpenAI modelling into something more local and cheaper or more efficient
 2. Increase functionality of hyperdb
-3. Make site_handler a class?
+3. Decouple vectorization
 4. I need something that makes a supercategory based on categories themselves to cluster queries easier
+5. Create API for scraper and displayer
 
 https://huggingface.co/spaces/Celestinian/Topic-Detection
 
+
+APIS:
+1. Button SCRAPE -> PUT -> Scrapes articles and stores them in vector DB
+2.  Button DISPLAY -> 
 ------------------
 1. Pull titles of RSS feeds
         - Categorize based on these

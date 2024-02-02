@@ -12,20 +12,12 @@ import pandas as pd
 
 if __name__ == "__main__":
 
-
-    # with open("summaries.txt", "r") as f:
-    #     for line in f:
-    #         documents.append(json.loads(line))
-
-    tmp = {"category": "AI", "url": "http://arxiv.org/abs/2401.08581", "pagename": "Temporal Embeddings: Scalable Self-Supervised Temporal Representation Learning from Spatiotemporal Data for Multimodal Computer Vision. (arXiv:2401.08581v1 [cs.CV])", "date": "2024-01-17", "summary": "A self-supervised approach using temporal embeddings and multimodal learning can effectively stratify land use based on geospatial activity patterns. This improves geospatial feature detection and real-time mapping services for user experience and safety."}
+  
 
     sql_manager = SQLManager()
     sql_manager.cursor()
 
-    # sql_manager.insert_summary(tmp["summary"])
-    # sql_manager.insert_metadata(tmp["category"], tmp["url"], tmp["pagename"], tmp["date"])
-    # sql_manager.commit()    
-    
+   
     embeddings = sql_manager.sql_to_pandas("embeddings")
     summary = sql_manager.sql_to_pandas("summary")
     metadata = sql_manager.sql_to_pandas("metadata")
@@ -64,9 +56,3 @@ if __name__ == "__main__":
     for result in results_cat:
         print(result[0])
  
-
-
-    # db = HyperDB(documents, key="summary")
-    # db.save("demo/rss_articles.pickle.gz")
-    # db.load("demo/rss_articles.pickle.gz")
-    # results = db.query("Markov.", top_k=5)

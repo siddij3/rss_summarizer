@@ -1,11 +1,5 @@
 import gzip
 import pickle
-
-
-import libs.site_handler as site_handler
-import libs.embeddings as embeddings
-from libs.sql_manager import SQLManager
-
 import numpy as np
 
 MAX_BATCH_SIZE = 2048    
@@ -15,7 +9,7 @@ torch.set_printoptions(profile="full")
 import torch.nn.functional as F
 
 
-from vector_math import (
+from libs.vector_math import (
     dot_product,
     adams_similarity,
     cosine_similarity,
