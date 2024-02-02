@@ -2,52 +2,108 @@ from bs4 import BeautifulSoup
 
 import api
 import re
-# import pinecone
+import openai
 import libs.site_handler as site_handler
 from libs.site_handler import get_links
-from libs.site_handler import clean_page
-from libs.site_handler import get_page
-from libs.site_handler import remove_duplicates
-from datetime import datetime
 import libs.embeddings as embeddings
+import requests
 
+import feedparser
 import libs.sql_manager as sql_manager
-# https://www.zenrows.com/blog/beautifulsoup-403#moderate-the-frequency-of-requests
-
-url = f"https://api.start.me/widgets/64657916,64619065,64814145/articles" 
-url2 = f"https://api.start.me/widgets/63871721/articles"
-
-model = "gpt-3.5-turbo-16k"
-index_name = "rss"
 
 
+# NO VECTORS IN THIS CLASS
 class Scraper:
-    def __init__(self, urls: list) -> None:
+    def __init__(self, urls,
+                 gpt_model="gpt-3.5-turbo-16k") -> None:
 
         # I need a better way to find duplicates
-        self.urls = get_links(urls)
+        # each feed item will have some of the following or all:
+        # Title, Summary, Authors, published date, Check tags
+
+        self.gpt_model = gpt_model
+        self.feed = []
+        for url in urls:
+            feed = feedparser.parse(url)
+            if feed.bozo:
+                continue;
+
+            for entry in feed.entries:
+                self.feed.append(entry)
+
         # self.urls = remove_duplicates(self.urls)
-        
-        self.date = datetime.today().strftime('%Y-%m-%d')
+        # self.date = datetime.today().strftime('%Y-%m-%d')
+                
         self.forbidden = []
-        self.metadata = {}  # (urls, pagenames, entries, dates) just like a pandas df
+
+        num_titles = len(self.feed)
+        self.metadata = {}  # TODO (urls, pagenames, entries, dates) just like a pandas df
+        self.metadata["url"] = [self.feed[i].link for i in range(num_titles)]
+
+        self.metadata["pagename"] = [self.feed[i].title for i in range(num_titles)]
+        self.metadata["summary"] = [self.feed[i].summary if self.feed[i].summary is not None else None for i in range(num_titles)]
+        self.metadata["date"] = [self.feed[i].published  if self.feed[i].published is not None else None for i in range(num_titles)]
+        self.metadata["author"] = [[author.name for author in self.feed[i].authors]  if self.feed[i].authors is not None else None for i in range(num_titles)]
+
+        self.categories = []                   
+            
+    def entries(self):
+        return self.feed
+
+    def get_metadata(self) -> dict:
+        return self.metadata
+
+    def get_forbidden_links(self):
+        return self.forbidden
+
+    #Makes API call to summarize the articles
+    def summarize(self, url):
+        clean_text = self.scrape_summary(url) 
+        if clean_text is None:
+            return clean_text
+
+        num_tokens = embeddings.num_tokens_from_string(clean_text, self.gpt_model)
+        if  num_tokens > 16300: #limit is 16,385 
+            return None
+            #pop from the list
+            
+        messages_1 = [{"role": "system", "content": api.system_content},
+            {"role": "user", "content": f"{clean_text}"}]
+        response1 = site_handler.gpt_response(self.gpt_model, messages_1)
+        cleaned_article = response1.choices[0].message.content
+
+        return cleaned_article
+
+    # MAkes api calls using either the title or the article summary, or both    
+    def categorize(self):
+        
+        for i, summary in enumerate(self.metadata["summary"]):
+            if summary is None:
+                summary = self.metadata["summary"][i] = self.summarize(self.metadata.url[i])
+                print(summary)
+
+            messages_2 = [{"role": "system", "content": api.system_content2},
+                {"role": "user", "content": summary}]
+            response2 = site_handler.gpt_response(self.gpt_model, messages_2)
+            category = response2.choices[0].message.content
+            print(category)
+            self.categories.append(category) # clean the punctuation
+            
+        self.metadata["category"] = self.categories
 
     # Scrapes articles
+    # RSS links if there's no premilinary summary in the description. Occurs with Bozo links
+    @staticmethod
+    def scrape_summary(self, url) -> str:
+        # This is to get the summaries if there is none
+        page = requests.get(url)
         
-    def get_page(self):
-        page = get_page(url)
 
-        if page.status_code == 403:
+        if site_handler.REST_codes(page.status_code) is False:
             self.forbidden.append(url)
-            return False
+            return None
+
         
-        elif page.status_code == 202:
-            return False
-
-        pass
-
-    def scrape_feeds(self, page) -> str:
-
         if ("arxiv" in url):
             clean_text = BeautifulSoup(page.text, 'html.parser').find(property="og:description")['content']
             title = title.split("(arX   ")[0]
@@ -63,91 +119,50 @@ class Scraper:
         paragraphs = ' '.join(paragraphs)
         clean_text = re.sub(tag, '', paragraphs)
 
-        return clean_text, title
-        
-
-
-    def get_metadata(self, entry) -> dict:
-        metadata = { "url": entry['url'], "pagename": entry['title'], "date": self.date}
-        return metadata
-
-
-    def get_forbidden_links(self):
-        return self.forbidden
+        return clean_text
     
-    def links(self):
-        return self.urls
 
-    #Makes API calls to summarize the articles
-    def summarize():
+    @staticmethod
+    def split_document(document, chunk_size=2000):
+        chunks = []
+        for i in range(0, len(document), chunk_size):
+            chunks.append(document[i:i+chunk_size])
+        return chunks
+    
+    @staticmethod
+    def gpt_response(model, message):
+        return openai.ChatCompletion.create(
+                    model=model,
+                    messages=message
+                )
 
-        return {}
-    # MAkes api calls using either the title or the article summary, or both    
-    def categorize():
+    def remove_duplicates(self, urls): # TODO   
+        # Get links from SQL, then pop the ones that match
+        # Or look over github again cuz idr
         pass
+        """
+        documents = []
+        with open("summaries.txt", "r") as f:
+            for line in f:
+                documents.append(json.loads(line))
 
+        in_file  = [x['url'] for x in documents]
+        
+        dict = {}
 
-def scrape():
-    rss_all = get_links([url, url2])
-
-    rss_links = remove_duplicates(rss_all)
-    del(rss_all)
-
-    forbidden_links = []
-    acceptable_links_count = 0
-    filtered_links = []
-
-    for i, theme in enumerate(rss_links):
-        for entry in rss_links[theme]:
-
-            url = entry['url']
-            metadata = { "url": url, "pagename": entry['title'], "date": date}
-
-            page = get_page(url)
-            if page.status_code == 403:
-                forbidden_links.append(url)
-                continue
-            elif page.status_code == 202:
-                continue
-
-            clean_text, metadata['pagename'] = clean_page(url, page, metadata['pagename'])
-
-            ####################################
+        for key, value in urls.items():
+            new_rss_links = []
+            for article in value:
+                new_rss_links.append( {
+                    "url" :article['url'],
+                    "title" :  article["title"]
+                })
             
-            num_tokens = embeddings.num_tokens_from_string(clean_text, model)
-            if  num_tokens > 16300: #limit is 16,385 
-                chunks = site_handler.split_document(clean_text)
-                print(num_tokens)
-                continue
+            dict[str(key)] = new_rss_links
 
-
-            # Creating input to summarize text from HTML/XML code and text
-            messages_1 = [{"role": "system", "content": api.system_content},
-                        {"role": "user", "content": f"{clean_text}"}]
-            response1 = site_handler.gpt_response(model, messages_1)
-            cleaned_article = response1.choices[0].message.content
-            
-            print(cleaned_article, "\n")
-
-            print(entry['title'])
-            # Uses LLM to find a category for the article
-            messages_2 = [{"role": "system", "content": api.system_content2},
-                        {"role": "user", "content": cleaned_article}]
-            response2 = site_handler.gpt_response(model, messages_2)
-            category = response2.choices[0].message.content
-
-            ###############
-            print(category)
-
-            metadata['category'] = category
-            #Update Meta data
-            # continue
-            metadata["summary"] = cleaned_article
-
-            # sql_manager.write_to_sql(metadata)
-            embeddings.write_to_file(metadata)
-            acceptable_links_count += 1
-
-
-    print("forbidden_links count", len(forbidden_links))
-    print("acceptable_links_count", acceptable_links_count)
+        
+        for key, value in dict.items():
+            for article in dict[key]:
+                if article['url'] in in_file:
+                    dict[key].remove(article)    
+            pass"""
