@@ -4,8 +4,7 @@ import api
 import re
 import openai
 import libs.site_handler as site_handler
-from libs.site_handler import get_links
-import libs.embeddings as embeddings
+import libs.hyperdb as embeddings
 import requests
 from datetime import datetime
 

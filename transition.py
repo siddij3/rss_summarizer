@@ -4,8 +4,8 @@ import api
 
 import libs.site_handler as site_handler
 
-from libs.embeddings import create_embedding
-from libs.embeddings import load_model_embeddings
+from libs.hyperdb import create_embedding
+from libs.hyperdb import load_model_embeddings
 # from langchain_community.vectorstores import Chroma
 # from langchain_community.document_loaders import TextLoader
 

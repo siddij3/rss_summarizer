@@ -41,11 +41,11 @@ class SQLManager:
         # self.mycursor.close()
 
     def connect_sqlalchemy(self):
-        con = f'mysql+pymysql://{self.user}:{self.password}@{self.host}/{self.database}'
+        self.con = f'mysql+pymysql://{self.user}:{self.password}@{self.host}/{self.database}'
         self.engine = create_engine(
-            con, 
+            self.con, 
             pool_recycle=3600)
-
+        return self.con
     
     def execute_query(self, query, data=None):
         if data == None:
@@ -81,7 +81,6 @@ class SQLManager:
         }
         self.mycursor.execute(query, data)
    
-
     def insert_summary(self, summary):
         query = ("INSERT INTO Summary (id,     summary) "
                            " VALUES (%(id)s, %(summary)s)")
@@ -90,7 +89,6 @@ class SQLManager:
             "summary": summary
         }
         self.mycursor.execute(query, data)
-
 
     def insert_embedding(self, summary_vector, category_vector):
         query = ("INSERT INTO Embeddings (summary_id,     summary_vector,     category_vector) " 
@@ -102,7 +100,7 @@ class SQLManager:
         }
         self.mycursor.execute(query, data)
     
- 
+
     def insert_category(self, category, category_vector):
         query = ("INSERT INTO categories (category,     category_vector) " 
                               " VALUES (%(category)s, %(category_vector)s)")
