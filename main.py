@@ -1,25 +1,34 @@
 from scrape_articles import Scraper
 from scrape_articles import scrape
 from datetime import datetime
+import feedparser
+import libs.urls as urls
+from hyperdb import HyperDB
 
 
-url = f"https://api.start.me/widgets/64657916,64619065,64814145/articles" 
-url2 = f"https://api.start.me/widgets/63871721/articles"
-
-model = "gpt-3.5-turbo-16k"
-index_name = "rss"
 date = datetime.today().strftime('%Y-%m-%d')
 
+
+    
 if __name__ == '__main__':
 
 
-# Keep the scraping and the SQL stuff decoupled.
-    article_scraper = Scraper([url, url2])
+# # Keep the scraping and the SQL stuff decoupled.
+    article_scraper = Scraper(urls.rss_urls)
+    # article_scraper.categorize()
+    print(article_scraper.get_metadata()["author"])
 
-   
-    rss_links = article_scraper.links()
-    for i, theme in enumerate(rss_links):
-        for entry in rss_links[theme]:
-            print(entry)
+    
 
-        # combine metadata here
+    # I should create the embeddings out here?
+    # sql_manager.write_to_sql(metadata)
+    """
+    1. Connect to mydb
+    2. Get cursor
+    3. Split values appropriately for each table
+    4. 
+    """
+    # embeddings.write_to_file(metadata)
+
+    # print("forbidden_links count", len(forbidden_links))
+    # print("acceptable_links_count", acceptable_links_count)
