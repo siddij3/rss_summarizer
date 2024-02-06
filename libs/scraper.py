@@ -7,9 +7,10 @@ import libs.site_handler as site_handler
 import libs.hyperdb as embeddings
 import requests
 from datetime import datetime
-
+import string
 import feedparser
-
+from libs.sql_manager import SQLManager
+import re
 
 # NO VECTORS IN THIS CLASS
 class Scraper:
@@ -30,22 +31,53 @@ class Scraper:
             for entry in feed.entries:
                 self.feed.append(entry)
 
+        self.remove_duplicates(self.feed) #Remove duplicates earlier TODO
+
         # self.urls = remove_duplicates(self.urls)
         date = datetime.today().strftime('%Y-%m-%d')
-                
+            
         self.forbidden = []
 
+
+        CLEANR = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
         num_titles = len(self.feed)
         self.metadata = {}  # TODO (urls, titles, entries, dates) just like a pandas df
         self.metadata["url"] = [self.feed[i].link for i in range(num_titles)]
 
         self.metadata["title"] = [self.feed[i].title for i in range(num_titles)]
-        self.metadata["summary"] = [self.feed[i].summary if self.feed[i].summary is not None else None for i in range(num_titles)]
+        self.metadata["summary"] = [re.sub(CLEANR, '', self.feed[i].summary) if self.feed[i].summary is not None else None for i in range(num_titles)]
         self.metadata["date"] = [date for i in range(num_titles)]
         self.metadata["author"] = [[author.name for author in self.feed[i].authors]  if self.feed[i].authors is not None else None for i in range(num_titles)]
 
         self.categories = []                   
-            
+    
+    def remove_duplicates(self, urls): 
+        
+        sql_manager = SQLManager()
+        query = ("SELECT url, count(url) AS count FROM metadata GROUP by url;")
+        existing_links = [link[0] for link in sql_manager.query(query)]
+
+        query = ("SELECT title, count(title) AS count FROM metadata GROUP by title;")
+        existing_titles = [title[0] for title in sql_manager.query(query)]
+        
+        
+        my_set = []
+        for i, article in enumerate(self.feed):
+            isDup = False
+            for key, value in article.items():
+                if key == "link" or key == "title":
+                    if value in existing_links or value in existing_titles:
+                        isDup = True
+                        continue
+            if not isDup:
+                my_set.append(article)
+                    
+
+        print("Not duplicated", len(my_set))
+        print("Duplicated", len(self.feed))
+        self.feed = my_set
+    
+
     def entries(self):
         return self.feed
 
@@ -55,37 +87,60 @@ class Scraper:
     def get_forbidden_links(self):
         return self.forbidden
 
+    def remove_entry(self, index):
+        for key in self.metadata:
+            print(index)
+            self.metadata[key].remove(index)
+        pass
+
     #Makes API call to summarize the articles
     def summarize(self, url):
         clean_text = self.scrape_summary(url) 
+
         if clean_text is None:
             return clean_text
 
-        num_tokens = embeddings.num_tokens_from_string(clean_text, self.gpt_model)
-        if  num_tokens > 16300: #limit is 16,385 
-            return None
-            #pop from the list
+        if len(clean_text) > 98300:
+            num_tokens = embeddings.num_tokens_from_string(clean_text, self.gpt_model)
+            if  num_tokens > 16300: #limit is 16,385
+                index = self.metadata["url"].index(url) 
+                self.remove_entry(index)
+                return None
+                #pop from the list
             
         messages_1 = [{"role": "system", "content": api.system_content},
             {"role": "user", "content": f"{clean_text}"}]
-        response1 = site_handler.gpt_response(self.gpt_model, messages_1)
+        response1 = self.gpt_response(self.gpt_model, messages_1)
         cleaned_article = response1.choices[0].message.content
 
         return cleaned_article
 
-    # MAkes api calls using either the title or the article summary, or both    
+    # MAkes api calls using either the title or the article summary, or both 
+    # Separate to another class   
     def categorize(self):
         
         for i, summary in enumerate(self.metadata["summary"]):
             if summary is None:
                 summary = self.metadata["summary"][i] = self.summarize(self.metadata.url[i])
-                print(summary)
+                print("Summary; ", summary , "\n")
 
+            num_tokens = embeddings.num_tokens_from_string(summary, self.gpt_model)
+            if  num_tokens > 16300: #limit is 16,385 
+                summary = self.metadata["title"][i] #Uses the title to categorize instead of the summary
+ 
             messages_2 = [{"role": "system", "content": api.system_content2},
                 {"role": "user", "content": summary}]
-            response2 = site_handler.gpt_response(self.gpt_model, messages_2)
+            
+            response2 = self.gpt_response(self.gpt_model, messages_2)
             category = response2.choices[0].message.content
-            print(category)
+
+            # Make it one word only 
+            if ' ' in category:
+                category = category.split(' ')[0]
+            if '.' in category:
+                category = category.split('.')[0]
+
+            
             self.categories.append(category) # clean the punctuation
             
         self.metadata["category"] = self.categories
@@ -97,7 +152,7 @@ class Scraper:
         # This is to get the summaries if there is none
         page = requests.get(url)
         
-        if site_handler.REST_codes(page.status_code) is False:
+        if self.REST_codes(page.status_code) is False:
             self.forbidden.append(url)
             return None
 
@@ -133,10 +188,7 @@ class Scraper:
                     messages=message
                 )
 
-    def remove_duplicates(self, urls): # TODO   
-        # Get links from SQL, then pop the ones that match
-        # Or look over github again cuz idr
-        pass
+    
         """
         documents = []
         with open("summaries.txt", "r") as f:
@@ -163,3 +215,10 @@ class Scraper:
                 if article['url'] in in_file:
                     dict[key].remove(article)    
             pass"""
+    
+    @staticmethod
+    def REST_codes(status_code):
+        if status_code == 200 :
+            return True
+        elif status_code == 403 or status_code == 202:
+            return False
