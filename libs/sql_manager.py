@@ -29,6 +29,10 @@ class SQLManager:
 
         self.mycursor = self.mydb.cursor()
 
+    @property
+    def cursor(self):
+        return self.mycursor
+
     def end_connection(self):
         self.mycursor.close()
         self.mydb.close()
@@ -61,6 +65,10 @@ class SQLManager:
             result = conn.execute(query)
 
         return result
+    
+    def query(self, query):
+        self.mycursor.execute(query)
+        return self.mycursor
     
     def sql_to_pandas(self, table_name):
         output = pd.read_sql_table(table_name, 

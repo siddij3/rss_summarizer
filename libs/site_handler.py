@@ -1,14 +1,11 @@
 from bs4 import BeautifulSoup
 import json
 from selenium import webdriver
-import re
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
-import requests
-import openai
+
 import libs.headers as headers
 
-import tiktoken
 
 
 def get_links(urls):
@@ -27,18 +24,9 @@ def get_links(urls):
     if len(rss) > 1:
         for i in rss:
             merged_dict = {**merged_dict, **i}
-
     return merged_dict
 
-    
-def REST_codes(status_code):
-    if status_code == 200 :
-        return True
-    elif status_code == 403 or status_code == 202:
-        return False
-
 def get_with_header(url):
-    from seleniumwire import webdriver
     driver = webdriver.Chrome()
     
     driver.request_interceptor = headers.header_marketpost
