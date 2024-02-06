@@ -74,7 +74,7 @@ class Scraper:
                     
 
         print("Not duplicated", len(my_set))
-        print("Duplicated", len(self.feed))
+        print("Total articles", len(self.feed))
         self.feed = my_set
     
 
