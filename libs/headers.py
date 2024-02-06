@@ -15,18 +15,3 @@ def header_marketpost(request):
     request.headers["Upgrade-Insecure-Requests"] = "application/x-www-form-urlencoded; charset=UTF-8"
     request.headers["Upgrade-Insecure-Requests"] = "www.marktechpost.com"
 
-# header_marketpost= [  { 
-
-
-#     "Content-Length": 66,
-#     "Origin": "https://www.marktechpost.com",
-#     "Connection": "keep-alive",
-#     "Referer": "https://www.marktechpost.com/2024/01/06/this-ai-paper-presents-a-comprehensive-study-of-knowledge-editing-for-large-language-models/",
-#     "Cookie": "advanced_ads_browser_width=1903; cookielawinfo-checkbox-necessary=yes; cookielawinfo-checkbox-non-necessary=yes; cookielawinfo-checkbox-analytics=yes; cookielawinfo-checkbox-performance=yes; cookielawinfo-checkbox-uncategorized=yes; cookielawinfo-checkbox-functional=yes; cookielawinfo-checkbox-advertisement=yes; viewed_cookie_policy=yes; cli_user_preference=en-cli-yes-checkbox-necessary-yes-checkbox-non-necessary-yes-checkbox-analytics-yes-checkbox-performance-yes-checkbox-uncategorized-yes-checkbox-functional-yes-checkbox-advertisement-yes; CookieLawInfoConsent=eyJ2ZXIiOiIxIiwibmVjZXNzYXJ5IjoidHJ1ZSIsIm5vbi1uZWNlc3NhcnkiOiJ0cnVlIiwiYW5hbHl0aWNzIjoidHJ1ZSIsInBlcmZvcm1hbmNlIjoidHJ1ZSIsInVuY2F0ZWdvcml6ZWQiOiJ0cnVlIiwiZnVuY3Rpb25hbCI6InRydWUiLCJhZHZlcnRpc2VtZW50IjoidHJ1ZSJ9; _I_=8495ef1bab0d8b77df2e86a0204625fb-1704577861; SGPBShowingLimitationDomain49000={\"openingCount\":1,\"openingPage\":\"\"}",
-#     "Sec-Fetch-Dest": "empty",
-#     "Sec-Fetch-Mode": "cors",
-#     "Sec-Fetch-Site": "same-origin",
-#     "TE": "trailers" }
-#     ]
-
-  
