@@ -8,14 +8,14 @@ import torch
 torch.set_printoptions(profile="full")
 import torch.nn.functional as F
 import tiktoken
+import re
 
-# import nltk
-# nltk.download('punkt')
-# from nltk.tokenize import word_tokenize
-# from nltk.stem.porter import PorterStemmer
-# stemmer = PorterStemmer()
-# nltk.download('stopwords')
-# from nltk.corpus import stopwords
+import nltk
+nltk.download('punkt')
+from nltk.stem.porter import PorterStemmer
+stemmer = PorterStemmer()
+nltk.download('stopwords')
+from nltk.corpus import stopwords
 
 from libs.vector_math import (
     dot_product,
@@ -198,19 +198,19 @@ def create_embedding(tokenizer, model, sentences):
 
 
 
-# def process_text(text):
-#     # Make all the strings lowercase and remove non alphabetic characters
-#     text = re.sub('[^A-Za-z]', ' ', text.lower())
+def process_text(text):
+    # Make all the strings lowercase and remove non alphabetic characters
+    text = re.sub('[^A-Za-z]', ' ', text.lower())
 
-#     # Tokenize the text; this is, separate every sentence into a list of words
-#     # Since the text is already split into sentences you don't have to call sent_tokenize
-#     tokenized_text = word_tokenize(text)
+    # Tokenize the text; this is, separate every sentence into a list of words
+    # Since the text is already split into sentences you don't have to call sent_tokenize
+    tokenized_text = word_tokenize(text)
 
-#     # Remove the stopwords and stem each word to its root
-#     clean_text = [
-#         stemmer.stem(word) for word in tokenized_text
-#         if word not in stopwords.words('english')
-#     ]
+    # Remove the stopwords and stem each word to its root
+    clean_text = [
+        stemmer.stem(word) for word in tokenized_text
+        if word not in stopwords.words('english')
+    ]
 
-#     # Remember, this final output is a list of words
-#     return clean_text
+    # Remember, this final output is a list of words
+    return clean_text

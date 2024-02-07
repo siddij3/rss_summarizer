@@ -13,7 +13,7 @@ CREATE TABLE summary (
 ); 
 CREATE TABLE metadata (
     category VARCHAR(255) NOT NULL,
-    url VARCHAR (255) NOT NULL,
+    url VARCHAR (512) NOT NULL,
     title VARCHAR (255) NOT NULL,
     author VARCHAR (255),
     summary_id int NOT NULL AUTO_INCREMENT,

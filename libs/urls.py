@@ -1,18 +1,18 @@
 rss_urls = [
         "https://feeds.captivate.fm/techpolicypress/",
-        "https://edtechprinciples.com/feed/",
+        "https://edtechprinciples.com/feed/"
         "https://www.siia.net/feed/",
-        "https://datasociety.net/feed/",
-        "https://www.cambridge.org/core/rss/product/id/46CDA9F399554E6B3AB5E4821C6A4B43",
-        "https://freedom-to-tinker.com/feed/",
-        "https://www.eff.org/rss/updates.xml",
-        "https://www.rand.org/topics/science-and-technology.xml",
-        "https://cset.georgetown.edu/feed/",
-        "https://epic.org/feed/",
-        "https://dig.watch/feed",
-        "https://blog.opensource.org/feed/",
-        "https://brain.ieee.org/feed/",
-        "https://policyreview.info/feed",
+        "https://datasociety.net/feed/"]
+        # "https://www.cambridge.org/core/rss/product/id/46CDA9F399554E6B3AB5E4821C6A4B43",
+        # "https://freedom-to-tinker.com/feed/",
+        # "https://www.eff.org/rss/updates.xml",
+        # "https://www.rand.org/topics/science-and-technology.xml",
+        # "https://cset.georgetown.edu/feed/",
+        # "https://epic.org/feed/",
+        # "https://dig.watch/feed",
+        # "https://blog.opensource.org/feed/",
+        # "https://brain.ieee.org/feed/",
+        # "https://policyreview.info/feed",
         # "https://digi-con.org/feed/",
         # "https://future.a16z.com/feed",
         # "https://www.meganannebrozek.com/blog-feed.xml",
@@ -60,6 +60,6 @@ rss_urls = [
         # "https://www.rand.org/topics/cyber-and-data-sciences.xml"
 
         # Bozo articles
-        "https://api.start.me/widgets/64657916,64619065,64814145/articles" ,
-        "https://api.start.me/widgets/63871721/articles"
-            ]
+        # "https://api.start.me/widgets/64657916,64619065,64814145/articles" ,
+        # "https://api.start.me/widgets/63871721/articles"
+        #     ]
