@@ -4,6 +4,7 @@
 4. I need something that makes a supercategory based on categories themselves to cluster queries easier
 5. Create API for scraper and displayer
 6. Clean up the summarizer for long summaries.
+7. Unit Testing
 
 https://huggingface.co/spaces/Celestinian/Topic-Detection
 

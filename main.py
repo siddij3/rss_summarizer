@@ -1,24 +1,26 @@
+
+
+import api
 from libs.scraper import Scraper
-
 from datetime import datetime
-
 import libs.urls as urls
 import numpy as np
-from libs.hyperdb import HyperDB
-from libs.sql_manager import SQLManager
-from libs.hyperdb import create_embedding
+from libs.NLP import HyperDB
+from libs.db_rss_feeds import RSSDatabase
 import pickle
-from libs.hyperdb import load_model_embeddings
-from typing import Union
+
 from fastapi import FastAPI
 import openai   
 
+from libs.NLP import Tokens
+import nltk
+# nltk.download('punkt')
+# nltk.download('stopwords')
 
 app = FastAPI()
 
 
 def get_vector(embeddings_list):
-
     vectors = None
     for vector in embeddings_list:
         if vectors is None:
@@ -28,16 +30,14 @@ def get_vector(embeddings_list):
 
 
 def scrape_rss():
-    date = datetime.today().strftime('%Y-%m-%d')
-
+    
     article_scraper = Scraper(urls.rss_urls)
     article_scraper.categorize()
     documents = article_scraper.get_metadata() #dictionary class
-
-    mysql = SQLManager()
     
-    tokenizer, model = load_model_embeddings()
-
+    myrssdb = RSSDatabase()
+    mytokens = Tokens()
+    
     for i, title in enumerate(documents["title"]):
  
         category = documents["category"][i]
@@ -46,21 +46,24 @@ def scrape_rss():
         date = documents["date"][i]
         summary = documents["summary"][i]
 
-        summary_vector = pickle.dumps(create_embedding(tokenizer, model, summary)[0].numpy())
-        category_vector = pickle.dumps(create_embedding(tokenizer, model, category)[0].numpy())
+        summary_vector = pickle.dumps(mytokens.create_embedding(summary)[0].numpy())
+        category_vector = pickle.dumps(mytokens.create_embedding(category)[0].numpy())
 
-        mysql.insert_summary(summary)
-        mysql.insert_metadata(category, url, title, author, date)
-        mysql.insert_embedding(summary_vector, category_vector)
-        mysql.insert_category(category, category_vector)
-        mysql.commit()
+        myrssdb.insert_article_entry(summary, summary_vector, 
+                                   category, category_vector, 
+                                   url,      title, 
+                                   author,   date)
+
+        myrssdb.commit()
+
+    myrssdb.end_connection()
     
 
 def query_rss():
-    sql_manager = SQLManager()
+    sql_manager = RSSDatabase()
     query = ("SELECT category, count(category) AS count FROM metadata GROUP by category;")
 
-    results = sql_manager.query(query)
+    results = sql_manager.get_query(query)
     categories = [category for category, count in results]
 
     # For removing duplicate links TODO
@@ -88,12 +91,13 @@ def query_rss():
         results_cat = db_categories.query(category, top_k=15)
         # summary: str(article[0][0])
         # url: article[0][1][1]
-        # date: article[0][1][-1].strftime('%Y-%m-%d')
+        # title: article[0][1][2].strftime('%Y-%m-%d')
     
         summaries = [str(article[0][0]) for article in results_cat]
         sources = [(str(article[0][1][2]) , str(article[0][1][1])) for article in results_cat]
 
-        system_content3 = f"You will be given a list of topics under {category}. Write a few paragraphs that stitches these topics together."
+        system_content3 = (f"You will be given a list of topics under {category}. "
+                           "Write a few paragraphs that stitches these topics together.")
 
         gtp_message = [{"role": "system", "content": system_content3},
                         {"role": "user", "content": str(summaries)}]

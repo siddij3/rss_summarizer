@@ -7,7 +7,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 import libs.headers as headers
 
 
-
 def get_links(urls):
     with webdriver.Chrome(service=ChromeService(ChromeDriverManager().install())) as driver:
         sources = []
