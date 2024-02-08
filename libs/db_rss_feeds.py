@@ -1,28 +1,24 @@
 
-import pandas as pd
-from sqlalchemy import create_engine
-from sqlalchemy import text
-import mysql.connector
 import numpy.typing as npt
 from libs.sql_manager import SQLManager
+from libs.credentials import get_db_creds
+# Need to do this better somehow
 
-# This would have all the text, names, db details
+
 class RSSDatabase:
 
     def __init__(self,
-                host="localhost",
-                user="junaid",
-                password="junaid",
-                database="rss_feeds",
-                auth_plugin='mysql_native_password',
                 mydb=None):
-        
-        self.sqlmanager = SQLManager(host=host,
-                user=user,
-                password=password,
-                database=database,
-                auth_plugin=auth_plugin,
-                mydb=None)
+
+        creds = get_db_creds()
+
+        self.sqlmanager = SQLManager(
+                            host=creds["host"],
+                            user=creds["user"],
+                            password=creds["password"],
+                            database=creds["database"],
+                            auth_plugin=creds["auth_plugin"],
+                            mydb=None)
 
  
     def query_article_links(self):
@@ -35,16 +31,26 @@ class RSSDatabase:
         existing_titles = [title[0] for title in self.sqlmanager.get_query(query)]
         return existing_titles
     
+    def query_categories(self):
+        query = ("SELECT category, count(category) AS count FROM metadata GROUP by category;")
+        categories = [category for category, _ in self.sqlmanager.get_query(query)]
+        return categories
+    
+    def query_table_all_rows(self, table):
+        query = (f"SELECT * FROM {table};")
+        rows = [item for item in self.sqlmanager.get_query(query)]
+        return rows
+
     def commit(self):
         self.sqlmanager.commit()
 
     def end_connection(self):
         self.sqlmanager.end_connection()
 
-    def insert_article_entry(self, summary, summary_vector, 
-                                   category, category_vector, 
-                                   url,      title, 
-                                   author,   date):
+    def insert_article_entry(self, summary: str, summary_vector: npt.ArrayLike, 
+                                   category: str, category_vector: npt.ArrayLike, 
+                                   url: str,      title: str, 
+                                   author: str,   date) -> None:
         query = ("INSERT INTO Summary (id,     summary) "
                            " VALUES (%(id)s, %(summary)s)")
         data = {
@@ -64,7 +70,7 @@ class RSSDatabase:
                "author": author, 
             "date_published": date
         }
-        print(data)
+        
         self.sqlmanager.execute_insert_query(query, data)
 
         query = ("INSERT INTO Embeddings (summary_id,     summary_vector,     category_vector) " 

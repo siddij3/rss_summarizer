@@ -74,7 +74,7 @@ class Tokens():
         # Normalize embeddings
         sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
 
-        return sentence_embeddings
+        return sentence_embeddings[0].numpy()
 
 
     
@@ -115,6 +115,8 @@ class HyperDB():
         self.documents = []
         self.vectors = None
         
+        self.tokens = Tokens()
+
         if vectors is not None:
             self.vectors = vectors
             self.documents = documents
@@ -128,7 +130,6 @@ class HyperDB():
             self.model = model
         else:
             self.model = AutoModel.from_pretrained(auto_model)
-
 
         if similarity_metric.__contains__("dot"):
             self.similarity_metric = dot_product
@@ -146,7 +147,7 @@ class HyperDB():
             )
         
     def query(self, query_text, top_k=5, return_similarities=True):
-        query_vector = self.embedding_function([query_text])[0]
+        query_vector = self.tokens.create_embedding([query_text]) #TODO remove list
 
         # print(query_vector)
         # print(type(self.vectors[0]))

@@ -2,6 +2,8 @@ import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy import text
 import mysql.connector
+from libs.credentials import get_db_creds
+
 
 #This is the blind messenger
 class SQLManager:
@@ -12,12 +14,6 @@ class SQLManager:
                 auth_plugin=None,
                 mydb=None):
         
-        self.host = host
-        self.user=user
-        self.password=password
-        self.database=database
-        self.auth_plugin=auth_plugin
-
         if mydb == None:
             self.mydb = mysql.connector.connect(
                     host=  host,
@@ -42,6 +38,24 @@ class SQLManager:
         self.mycursor.close()
         self.mydb.close()
 
+    def execute_insert_query(self, query, data):
+        self.mycursor.execute(query, data)
+    
+    def get_query(self, query):
+        self.mycursor.execute(query)
+        return self.mycursor
+    
+class SQLandPandas:
+    def __init__(self) -> None:
+        #TODO Abstract this too later
+        creds = get_db_creds()
+        self.host = creds['host']
+        self.user=creds['user']
+        self.password=creds['password']
+        self.database=creds['database']
+        self.auth_plugin=creds['auth_plugin']
+
+        pass
 
     def connect_sqlalchemy(self):
         self.con = f'mysql+pymysql://{self.user}:{self.password}@{self.host}/{self.database}'
@@ -50,9 +64,6 @@ class SQLManager:
             pool_recycle=3600)
         return self.con
     
-    def execute_insert_query(self, query, data):
-        self.mycursor.execute(query, data)
-
 
     def query_tables(self, table):
         # Assuming that there's a table with that name apriori
@@ -61,13 +72,10 @@ class SQLManager:
             result = conn.execute(query)
         return result
     
-    def get_query(self, query):
-        self.mycursor.execute(query)
-        return self.mycursor
+
     
-    def sql_to_pandas(self, table_name):
+    def sql_to_df(self, table_name):
         output = pd.read_sql_table(table_name, 
                                    con=self.connect_sqlalchemy())
         
         return output
-    
