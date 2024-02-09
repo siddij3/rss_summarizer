@@ -2,8 +2,6 @@
 2. Increase functionality of hyperdb
 3. Decouple vectorization
 4. I need something that makes a supercategory based on categories themselves to cluster queries easier
-5. Create API for scraper and displayer
-6. Clean up the summarizer for long summaries.
 7. Unit Testing
 
 https://huggingface.co/spaces/Celestinian/Topic-Detection
@@ -16,26 +14,17 @@ APIS:
 1. Pull titles of RSS feeds
         - Categorize based on these
 
-a. Get categories from SQL query
-b. Use each category to query 20 related articles from VDB
-c. print each article
 
 
 
-
+Development TODO:
+1. Unit Testing
+2. Make Asynch
+3. CI/CD
+        a. Docker, TOML etc. 
+4. Create Database Schema in Python, check if it does/doesn't exist
+5. Create and download and initialize database with simple downloads
 
 (GPT 105 - look at some of these things)
 
 
-
-
-
-Eg.
-
-Potatos:
-> Summary of 5 articles
-urls and titles:
-
-Llamas:
-> Summary of 6 articles
-urls and titles:

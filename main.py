@@ -56,7 +56,7 @@ def scrape_rss():
 def query_rss():
     myrssdb = RSSDatabase()
 
-    categories = myrssdb.query_categories()
+    categories_count = myrssdb.query_categories()
 
     embeddings = myrssdb.query_table_all_rows('embeddings')
     summary = myrssdb.query_table_all_rows('summary')
@@ -86,8 +86,8 @@ def query_rss():
 
     gpt_bot = ChatBotHandler("gpt-4-turbo-preview")
     query = {}
-    for category in categories:
-        results_cat = db_categories.query(category, top_k=15)
+    for category, count in categories_count:
+        results_cat = db_categories.query(category, top_k=count)
         # summary: str(article[0][0])
         #     url: article[0][1][1]
         #   title: article[0][1][2].strftime('%Y-%m-%d')

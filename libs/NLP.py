@@ -9,8 +9,6 @@ import tiktoken
 import re
 
 from transformers import AutoTokenizer, AutoModel
-import numpy as np
-
 import openai
 
 from nltk.stem.porter import PorterStemmer
@@ -148,10 +146,6 @@ class HyperDB():
         
     def query(self, query_text, top_k=5, return_similarities=True):
         query_vector = self.tokens.create_embedding([query_text]) #TODO remove list
-
-        # print(query_vector)
-        # print(type(self.vectors[0]))
-        #  print((self.vectors.shape)) This should give (# elemnets, # dimensions in array)
         #  Vectors is of type ndarray with ndarry elements
         ranked_results, similarities = hyper_SVM_ranking_algorithm_sort(
             self.vectors, query_vector, top_k=top_k, metric=self.similarity_metric

@@ -78,6 +78,8 @@ class Scraper(SiteHandler):
         # each feed item will have some of the following or all:
         # Title, Summary, Authors, published date, Check tags    
         self.feed = []
+
+        #async here for each url
         for url in urls:
             feed = feedparser.parse(url)
             if feed.bozo:
@@ -87,7 +89,7 @@ class Scraper(SiteHandler):
             for entry in feed.entries:
                 self.feed.append(entry)
 
-        self.remove_duplicates() #Remove duplicates earlier TODO
+        self.remove_duplicates() 
 
         CLEANR = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
 
@@ -106,7 +108,7 @@ class Scraper(SiteHandler):
         self.ChatBotHandler = ChatBotHandler()
         self.Tokens = Tokens()
 
-    # Decouple later?
+    # Async this to infinity
     def remove_duplicates(self): 
         
         myrssdb = RSSDatabase()
@@ -140,18 +142,17 @@ class Scraper(SiteHandler):
         pass
 
     #Makes API call to summarize the articles
+    # Needs to be done asynch
     def summarize(self, url):
         clean_text = self.scrape_summary(url) 
 
         if clean_text is None:
             return clean_text
 
-
         if not self.check_size(clean_text): 
             self.remove_entry(self.metadata["url"].index(url))
             return None
- 
-            
+          
         cleaned_article = self.ChatBotHandler.message_maker(message_prompts.summary, clean_text)[0].message.content # f"{clean_text}" why did i have this?
         return cleaned_article
     
@@ -177,17 +178,21 @@ class Scraper(SiteHandler):
             category = self.ChatBotHandler.message_maker(message_prompts.category, summary)[0].message.content # f"{clean_text}" why did i have this?
             
             # Make it one word only 
-            if ' ' in category:
-                category = category.split(' ')[0]
-            if '.' in category:
-                category = category.split('.')[0]
-            if ':' in category:
-                category = category.split(':')[0]
+            category = self.remove_punctuation(category)
 
             self.categories.append(category.lower()) # clean the punctuation
 
             
         self.metadata["category"] = self.categories
+
+    def remove_punctuation(self, category):
+        if ' ' in category:
+            category = category.split(' ')[0]
+        if '.' in category:
+            category = category.split('.')[0]
+        if ':' in category:
+            category = category.split(':')[0]
+        return category
 
     # Scrapes articles
     # RSS links if there's no premilinary summary in the description. Occurs with Bozo links
