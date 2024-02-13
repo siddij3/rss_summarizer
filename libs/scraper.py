@@ -3,7 +3,7 @@ import re
 import requests
 
 from datetime import datetime
-date = datetime.today().strftime('%Y-%m-%d')
+
 
 import feedparser
 from libs.db_rss_feeds import RSSDatabase
@@ -18,7 +18,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import libs.headers as headers
 from libs.NLP import ChatBotHandler
 from libs.NLP import Tokens
-
+import asyncio
 
 
 class SiteHandler:
@@ -69,16 +69,32 @@ class SiteHandler:
 
 
 # NO VECTORS IN THIS CLASS
-class Scraper(SiteHandler):
+class Scraper():
     def __init__(self, 
                  urls=None):
-        super().__init__(urls)
-
+    
         # I need a better way to find duplicates
         # each feed item will have some of the following or all:
-        # Title, Summary, Authors, published date, Check tags    
+        # Title, Summary, Authors, published date, Check tags  
+
+        self.urls = urls  
+        self.metadata = {}  
+        self.CLEANR = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
+        self.date = datetime.today().strftime('%Y-%m-%d')
+        self.todo = asyncio.Queue()
+
+    async def run(self):
+
         self.feed = []
-        for url in urls:
+        feed = [
+                asyncio.create_task(feedparser.parse(url)) for url in self.urls
+                ]
+        await self.todo.join()
+
+        print(len(feed))
+        exit()
+
+        for url in self.urls:
             feed = feedparser.parse(url)
             if feed.bozo:
                 #Try the web-scraper route
@@ -89,15 +105,13 @@ class Scraper(SiteHandler):
 
         self.remove_duplicates() #Remove duplicates earlier TODO
 
-        CLEANR = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
 
-        self.metadata = {}  
 
         num_titles = len(self.feed)
         self.metadata["url"] = [self.feed[i].link for i in range(num_titles)]
         self.metadata["title"] = [self.feed[i].title for i in range(num_titles)]
-        self.metadata["summary"] = [re.sub(CLEANR, '', self.feed[i].summary) if self.feed[i].summary is not None else None for i in range(num_titles)]
-        self.metadata["date"] = [date for i in range(num_titles)]
+        self.metadata["summary"] = [re.sub(self.CLEANR, '', self.feed[i].summary) if self.feed[i].summary is not None else None for i in range(num_titles)]
+        self.metadata["date"] = [self.date for i in range(num_titles)]
         self.metadata["author"] = [[author.name for author in self.feed[i].authors]  if self.feed[i].authors is not None else None for i in range(num_titles)]
 
             
@@ -107,7 +121,7 @@ class Scraper(SiteHandler):
         self.Tokens = Tokens()
 
     # Decouple later?
-    def remove_duplicates(self): 
+    async def remove_duplicates(self): 
         
         myrssdb = RSSDatabase()
         existing_links =  myrssdb.query_article_links()
@@ -130,17 +144,17 @@ class Scraper(SiteHandler):
         self.feed = my_set
     
 
-    def get_metadata(self) -> dict:
+    async def get_metadata(self) -> dict:
         return self.metadata
 
-    def remove_entry(self, index):
+    async def remove_entry(self, index):
         for key in self.metadata:
             print(index)
             self.metadata[key].remove(index)
         pass
 
     #Makes API call to summarize the articles
-    def summarize(self, url):
+    async def summarize(self, url):
         clean_text = self.scrape_summary(url) 
 
         if clean_text is None:
@@ -155,7 +169,7 @@ class Scraper(SiteHandler):
         cleaned_article = self.ChatBotHandler.message_maker(message_prompts.summary, clean_text)[0].message.content # f"{clean_text}" why did i have this?
         return cleaned_article
     
-    def check_size(self, text):
+    async def check_size(self, text):
         if len(text) > 98300:
             
             num_tokens = self.Tokens.num_tokens_from_string(text)
@@ -165,7 +179,7 @@ class Scraper(SiteHandler):
         return True
 
     # Do asynch?
-    def categorize(self):
+    async def categorize(self):
         for i, summary in enumerate(self.metadata["summary"]):
             if summary is None:
                 summary = self.metadata["summary"][i] = self.summarize(self.metadata.url[i])
@@ -191,7 +205,9 @@ class Scraper(SiteHandler):
 
     # Scrapes articles
     # RSS links if there's no premilinary summary in the description. Occurs with Bozo links
-    def scrape_summary(self, url) -> str:
+        
+    # import html.parser
+    async def scrape_summary(self, url) -> str:
         # This is to get the summaries if there is none
         page = requests.get(url)
         

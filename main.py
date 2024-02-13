@@ -1,6 +1,7 @@
 
 
 import api
+import asyncio
 from libs.scraper import Scraper
 from datetime import datetime
 import libs.urls as urls
@@ -22,13 +23,18 @@ import nltk
 app = FastAPI()
 
 
-def scrape_rss():
+async def scrape_rss():
     
     article_scraper = Scraper(urls.rss_urls)
+    await article_scraper.run()
+
+
+    exit()
     article_scraper.categorize()
     documents = article_scraper.get_metadata() #dictionary class
     
     myrssdb = RSSDatabase()
+    
     mytokens = Tokens()
     
     for i, title in enumerate(documents["title"]):
@@ -125,4 +131,4 @@ async def scrape_articles():
 
     
 if __name__ == "__main__":
-    query_rss()
+    asyncio.run(scrape_rss())

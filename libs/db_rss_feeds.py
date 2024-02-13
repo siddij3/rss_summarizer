@@ -27,13 +27,13 @@ class RSSDatabase:
         return existing_links
 
     def query_article_titles(self):
-        query = ("SELECT title, count(title) AS count FROM metadata GROUP by title;")
+        query = ("SELECT title, count(title) AS count FROM metadata GROUP by title order by count Desc;")
         existing_titles = [title[0] for title in self.sqlmanager.get_query(query)]
         return existing_titles
     
     def query_categories(self):
-        query = ("SELECT category, count(category) AS count FROM metadata GROUP by category;")
-        categories = [category for category, _ in self.sqlmanager.get_query(query)]
+        query = ("SELECT category, count(category) AS count FROM metadata GROUP by category order by count Desc;")
+        categories = [category for category in self.sqlmanager.get_query(query)]
         return categories
     
     def query_table_all_rows(self, table):
